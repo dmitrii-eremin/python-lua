@@ -14,7 +14,7 @@ class NodeVisitor(ast.NodeVisitor):
         self.context = context if context is not None else Context()
         self.last_end_mode = TokenEndMode.LINE_FEED
         self.output = []
-        
+
     def visit_Assign(self, node):
         """Visit assign"""
         target = self.visit_all(node.targets[0], inline=True)
@@ -64,6 +64,22 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("({})".format(line))
 
+    def visit_Dict(self, node):
+        """Visit dictionary"""
+        keys = []
+
+        for key in node.keys:
+            value = self.visit_all(key, inline=True)
+            if isinstance(key, ast.Str):
+                value = "[{}]".format(value)
+            keys.append(value)
+
+        values = [self.visit_all(item, inline=True) for item in node.values]
+
+        elements = ["{} = {}".format(keys[i], values[i]) for i in range(len(keys))]
+        elements = ", ".join(elements)
+        self.emit("{{{}}}".format(elements))
+
     def visit_Expr(self, node):
         """Visit expr"""
         output = self.visit_all(node.value)
@@ -101,12 +117,22 @@ class NodeVisitor(ast.NodeVisitor):
         if node.names[0].asname is None:
             values["name"] = node.names[0].name
             values["asname"] = values["name"]
-            values["asname"] = values["asname"].split(".")[-1]            
+            values["asname"] = values["asname"].split(".")[-1]
         else:
             values["asname"] = node.names[0].asname
             values["name"] = node.names[0].name
 
         self.emit(line.format(**values))
+
+    def visit_Index(self, node):
+        """Visit index"""
+        self.emit(self.visit_all(node.value, inline=True))
+
+    def visit_List(self, node):
+        """Visit list"""
+        elements = [self.visit_all(item, inline=True) for item in node.elts]
+        line = "{{{}}}".format(", ".join(elements))
+        self.emit(line)
 
     def visit_Module(self, node):
         """Visit module"""
@@ -130,6 +156,16 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Str(self, node):
         """Visit str"""
         self.emit('"{}"'.format(node.s))
+
+    def visit_Subscript(self, node):
+        """Visit subscript"""
+        line = "{name}[{index}]"
+        values = {
+            "name": self.visit_all(node.value, inline=True),
+            "index": self.visit_all(node.slice, inline=True),
+        }
+
+        self.emit(line.format(**values))
 
     def visit_Tuple(self, node):
         """Visit tuple"""
