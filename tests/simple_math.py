@@ -1,0 +1,8 @@
+print(5 + 3)
+print(18 - 2)
+print(5 * 5)
+print(64 / 2)
+print(11 ** 2)
+print(11 // 2)
+print(11 / 2)
+print(((5 + 34) ** 2 / 53) * (24 - 6 * 3))
