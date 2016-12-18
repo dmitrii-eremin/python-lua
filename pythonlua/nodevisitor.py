@@ -14,6 +14,22 @@ class NodeVisitor(ast.NodeVisitor):
         self.context = context if context is not None else Context()
         self.last_end_mode = TokenEndMode.LINE_FEED
         self.output = []
+        
+    def visit_Assign(self, node):
+        """Visit assign"""
+        target = self.visit_all(node.targets[0], inline=True)
+        value = self.visit_all(node.value, inline=True)
+
+        self.emit("{target} = {value}".format(target=target, value=value))
+
+    def visit_Attribute(self, node):
+        """Visit attribute"""
+        line = "{object}.{attr}"
+        values = {
+            "object": self.visit_all(node.value, True),
+            "attr": node.attr,
+        }
+        self.emit(line.format(**values))
 
     def visit_BinOp(self, node):
         """Visit binary operation"""
@@ -77,6 +93,21 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(line.format(**values))
 
+    def visit_Import(self, node):
+        """Visit import"""
+        line = 'local {asname} = require "{name}"'
+        values = {"asname": "", "name": ""}
+
+        if node.names[0].asname is None:
+            values["name"] = node.names[0].name
+            values["asname"] = values["name"]
+            values["asname"] = values["asname"].split(".")[-1]            
+        else:
+            values["asname"] = node.names[0].asname
+            values["name"] = node.names[0].name
+
+        self.emit(line.format(**values))
+
     def visit_Module(self, node):
         """Visit module"""
         self.visit_all(node.body)
@@ -99,6 +130,11 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Str(self, node):
         """Visit str"""
         self.emit('"{}"'.format(node.s))
+
+    def visit_Tuple(self, node):
+        """Visit tuple"""
+        elements = [self.visit_all(item, inline=True) for item in node.elts]
+        self.emit(", ".join(elements))
 
     def generic_visit(self, node):
         """Unknown nodes handler"""

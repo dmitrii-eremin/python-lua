@@ -60,7 +60,8 @@ def make_test(filename):
         output = []
 
         proc = subprocess.Popen([LUA_PATH, tmp_file.name],
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,)
         while True:
             line = proc.stdout.readline()
             if line == b"":
