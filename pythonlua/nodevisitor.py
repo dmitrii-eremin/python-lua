@@ -20,7 +20,7 @@ class NodeVisitor(ast.NodeVisitor):
         target = self.visit_all(node.targets[0], inline=True)
         value = self.visit_all(node.value, inline=True)
 
-        self.emit("{target} = {value}".format(target=target, value=value))
+        self.emit("local {target} = {value}".format(target=target, value=value))
 
     def visit_Attribute(self, node):
         """Visit attribute"""
@@ -87,7 +87,7 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         """Visit function definition"""
-        line = "function {name}({arguments})"
+        line = "local function {name}({arguments})"
 
         name = node.name
         arguments = [arg.arg for arg in node.args.args]
