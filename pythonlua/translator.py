@@ -18,7 +18,7 @@ class Translator:
 
         visitor = NodeVisitor()
 
-        # print(ast.dump(py_ast_tree))
+        print(ast.dump(py_ast_tree))
 
         visitor.visit(py_ast_tree)
 

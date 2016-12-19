@@ -115,6 +115,34 @@ class NodeVisitor(ast.NodeVisitor):
         self.visit_all(node.body)
         self.emit("end")
 
+    def visit_If(self, node):
+        """Visit if"""
+        test = self.visit_all(node.test, inline=True)
+
+        line = "if {} then".format(test)
+
+        self.emit(line)
+        self.visit_all(node.body)
+
+        if node.orelse:
+            if isinstance(node.orelse[0], ast.If):
+                elseif = node.orelse[0]
+                elseif_test = self.visit_all(elseif.test, inline=True)
+
+                line = "elseif {} then".format(elseif_test)
+                self.emit(line)
+
+                output_length = len(self.output)
+                self.visit_If(node.orelse[0])
+
+                del self.output[output_length]
+                del self.output[-1]
+            else:
+                self.emit("else")
+                self.visit_all(node.orelse)
+
+        self.emit("end")
+
     def visit_IfExp(self, node):
         """Visit if expression"""
         line = "{cond} and {true_cond} or {false_cond}"
