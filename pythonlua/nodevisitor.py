@@ -22,6 +22,23 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("local {target} = {value}".format(target=target, value=value))
 
+    def visit_AugAssign(self, node):
+        """Visit augassign"""
+        operation = BinaryOperationDesc.OPERATION[node.op.__class__]
+
+        target = self.visit_all(node.target, inline=True)
+
+        values = {
+            "left": target,
+            "right": self.visit_all(node.value, inline=True),
+            "operation": operation["value"],
+        }
+
+        line = "({})".format(operation["format"])
+        line = line.format(**values)
+
+        self.emit("{target} = {line}".format(target=target, line=line))
+
     def visit_Attribute(self, node):
         """Visit attribute"""
         line = "{object}.{attr}"
@@ -128,6 +145,21 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit index"""
         self.emit(self.visit_all(node.value, inline=True))
 
+    def visit_Lambda(self, node):
+        """Visit lambda"""
+        line = "function({arguments}) return"
+
+        arguments = [arg.arg for arg in node.args.args]
+
+        function_def = line.format(arguments=", ".join(arguments))
+
+        output = []
+        output.append(function_def)
+        output.append(self.visit_all(node.body, inline=True))
+        output.append("end")
+
+        self.emit(" ".join(output))
+
     def visit_List(self, node):
         """Visit list"""
         elements = [self.visit_all(item, inline=True) for item in node.elts]
@@ -172,6 +204,14 @@ class NodeVisitor(ast.NodeVisitor):
         elements = [self.visit_all(item, inline=True) for item in node.elts]
         self.emit(", ".join(elements))
 
+    def visit_While(self, node):
+        """Visit while"""
+        test = self.visit_all(node.test, inline=True)
+
+        self.emit("while {} do".format(test))
+        self.visit_all(node.body)
+        self.emit("end")
+
     def generic_visit(self, node):
         """Unknown nodes handler"""
         raise RuntimeError("Unknown node: {}".format(node))
@@ -183,8 +223,8 @@ class NodeVisitor(ast.NodeVisitor):
         if isinstance(nodes, list):
             for node in nodes:
                 visitor.visit(node)
-                if not inline:
-                    self.output.append(visitor.output)
+            if not inline:
+                self.output.append(visitor.output)
         else:
             visitor.visit(nodes)
             if not inline:
