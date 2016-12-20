@@ -81,6 +81,14 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("({})".format(line))
 
+    def visit_Delete(self, node):
+        """Visit delete"""
+        targets = [self.visit_all(target, inline=True) for target in node.targets]
+        nils = ["nil" for _ in targets]
+        line = "{targets} = {nils}".format(targets=", ".join(targets),
+                                           nils=", ".join(nils))
+        self.emit(line)
+
     def visit_Dict(self, node):
         """Visit dictionary"""
         keys = []

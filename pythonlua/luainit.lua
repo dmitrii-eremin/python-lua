@@ -44,3 +44,19 @@ function dict(t)
     
     return t
 end
+
+function enumerate(t, start)
+    start = start or 1
+
+    local i, v = next(t, nil)
+    return function()
+        local index, value = i, v
+        i, v = next(t, i)
+
+        if index == nil then
+            return nil
+        end
+
+        return index + start - 1, value
+    end
+end
