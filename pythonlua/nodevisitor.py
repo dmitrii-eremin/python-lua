@@ -3,6 +3,9 @@ import ast
 
 from .binopdesc import BinaryOperationDesc
 from .cmpopdesc import CompareOperationDesc
+from .nameconstdesc import NameConstantDesc
+from .unaryopdesc import UnaryOperationDesc
+
 from .context import Context
 from .tokenendmode import TokenEndMode
 
@@ -227,6 +230,10 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit name"""
         self.emit(node.id)
 
+    def visit_NameConstant(self, node):
+        """Visit name constant"""
+        self.emit(NameConstantDesc.NAME[node.value])
+
     def visit_Num(self, node):
         """Visit number"""
         self.emit(str(node.n))
@@ -259,6 +266,19 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit tuple"""
         elements = [self.visit_all(item, inline=True) for item in node.elts]
         self.emit(", ".join(elements))
+
+    def visit_UnaryOp(self, node):
+        """Visit unary operator"""
+        operation = UnaryOperationDesc.OPERATION[node.op.__class__]
+        value = self.visit_all(node.operand, inline=True)
+
+        line = operation["format"]
+        values = {
+            "value": value,
+            "operation": operation["value"],
+        }
+
+        self.emit(line.format(**values))
 
     def visit_While(self, node):
         """Visit while"""
