@@ -54,6 +54,7 @@ def make_test(filename):
         lua_code = translator.translate(content)
 
         tmp_file = tempfile.NamedTemporaryFile("w")
+        tmp_file.write(translator.get_luainit()+ "\n")
         tmp_file.write(lua_code)
         tmp_file.flush()
 
@@ -71,7 +72,7 @@ def make_test(filename):
 
         output = "".join(output)
 
-        result = output == expected
+        result = output == expected       
     except RuntimeError:
         result = False
 

@@ -95,7 +95,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         elements = ["{} = {}".format(keys[i], values[i]) for i in range(len(keys))]
         elements = ", ".join(elements)
-        self.emit("{{{}}}".format(elements))
+        self.emit("dict {{{}}}".format(elements))
 
     def visit_Expr(self, node):
         """Visit expr"""
@@ -112,6 +112,19 @@ class NodeVisitor(ast.NodeVisitor):
         function_def = line.format(name=name, arguments=", ".join(arguments))
 
         self.emit(function_def)
+        self.visit_all(node.body)
+        self.emit("end")
+
+    def visit_For(self, node):
+        """Visit for loop"""
+        line = "for {target} in {iter} do"
+
+        values = {
+            "target": self.visit_all(node.target, inline=True),
+            "iter": self.visit_all(node.iter, inline=True),
+        }
+
+        self.emit(line.format(**values))
         self.visit_all(node.body)
         self.emit("end")
 
@@ -191,7 +204,7 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_List(self, node):
         """Visit list"""
         elements = [self.visit_all(item, inline=True) for item in node.elts]
-        line = "{{{}}}".format(", ".join(elements))
+        line = "list {{{}}}".format(", ".join(elements))
         self.emit(line)
 
     def visit_Module(self, node):
