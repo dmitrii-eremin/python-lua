@@ -1,6 +1,5 @@
 """Node visitor"""
 import ast
-from enum import Enum
 
 from .binopdesc import BinaryOperationDesc
 from .cmpopdesc import CompareOperationDesc

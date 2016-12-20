@@ -72,7 +72,7 @@ def make_test(filename):
 
         output = "".join(output)
 
-        result = output == expected       
+        result = output == expected
     except RuntimeError:
         result = False
 
