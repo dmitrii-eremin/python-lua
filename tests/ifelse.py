@@ -1,6 +1,7 @@
 a = 45
+b = 0
 
-if a > 5:
+if a > 5 and b < 34:
     print("a > 5")
     if a >= 45:
         print("a >= 45")

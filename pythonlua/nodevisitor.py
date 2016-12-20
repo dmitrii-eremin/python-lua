@@ -2,6 +2,7 @@
 import ast
 
 from .binopdesc import BinaryOperationDesc
+from .boolopdesc import BooleanOperationDesc
 from .cmpopdesc import CompareOperationDesc
 from .nameconstdesc import NameConstantDesc
 from .unaryopdesc import UnaryOperationDesc
@@ -57,6 +58,18 @@ class NodeVisitor(ast.NodeVisitor):
         values = {
             "left": self.visit_all(node.left, True),
             "right": self.visit_all(node.right, True),
+            "operation": operation["value"],
+        }
+
+        self.emit(line.format(**values))
+
+    def visit_BoolOp(self, node):
+        """Visit boolean operation"""
+        operation = BooleanOperationDesc.OPERATION[node.op.__class__]
+        line = "({})".format(operation["format"])
+        values = {
+            "left": self.visit_all(node.values[0], True),
+            "right": self.visit_all(node.values[1], True),
             "operation": operation["value"],
         }
 
