@@ -60,6 +60,10 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(line.format(**values))
 
+    def visit_Break(self, node):
+        """Visit break"""
+        self.emit("break")
+
     def visit_Call(self, node):
         """Visit function call"""
         line = "{name}({arguments})"
@@ -227,6 +231,10 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Num(self, node):
         """Visit number"""
         self.emit(str(node.n))
+
+    def visit_Pass(self, node):
+        """Visit pass"""
+        pass
 
     def visit_Return(self, node):
         """Visit return"""
