@@ -354,7 +354,31 @@ class NodeVisitor(ast.NodeVisitor):
         test = self.visit_all(node.test, inline=True)
 
         self.emit("while {} do".format(test))
+
         self.visit_all(node.body)
+
+        self.emit("end")
+
+    def visit_With(self, node):
+        """Visit with"""
+        self.emit("do")
+
+        self.visit_all(node.body)
+
+        body = self.output[-1]
+        lines = []
+        for i in node.items:
+            line = ""
+            if i.optional_vars is not None:
+                line = "local {} = "
+                line = line.format(self.visit_all(i.optional_vars, 
+                                                  inline=True))
+            line += self.visit_all(i.context_expr, inline=True)
+            lines.append(line)
+
+        for line in lines:
+            body.insert(0, line)
+
         self.emit("end")
 
     def generic_visit(self, node):
