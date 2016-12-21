@@ -164,6 +164,15 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("end")
 
+        for decorator in reversed(node.decorator_list):
+            decorator_name = self.visit_all(decorator, inline=True)
+            values = {
+                "name": name,
+                "decorator": decorator_name,
+            }
+            line = "{name} = {decorator}({name})".format(**values)
+            self.emit(line)
+
     def visit_For(self, node):
         """Visit for loop"""
         line = "for {target} in {iter} do"
