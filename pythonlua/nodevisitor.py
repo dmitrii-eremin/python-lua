@@ -159,7 +159,7 @@ class NodeVisitor(ast.NodeVisitor):
         self.visit_all(node.body)
         
         if node.args.vararg is not None:
-            line = "local {name} = {{...}}".format(name=node.args.vararg.arg)
+            line = "local {name} = list {{...}}".format(name=node.args.vararg.arg)
             self.output[-1].insert(0, line)
 
         self.emit("end")
