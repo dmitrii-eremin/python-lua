@@ -41,10 +41,20 @@ end
 local function list(t)
     local methods = {}
 
+    methods.append = function(value)
+        table.insert(t, value)
+    end
+
     local iterator_index = nil
 
     setmetatable(t, {
-        __index = methods,
+        __index = function(self, index)
+            if type(index) == "number" and index < 0 then
+                return rawget(t, #t + index + 1)
+            end
+
+            return methods[index]
+        end,
         __call = function(self, _, idx)
             if idx == nil and iterator_index ~= nil then
                 iterator_index = nil
