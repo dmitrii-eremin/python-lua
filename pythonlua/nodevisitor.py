@@ -90,13 +90,26 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_Compare(self, node):
         """Visit compare"""
+
+        line = ""
+
         left = self.visit_all(node.left, inline=True)
-        line = left
-        for i, op_instance in enumerate(node.ops):
-            right = node.comparators[i]
-            operation = CompareOperationDesc.OPERATION[op_instance.__class__]
-            right = self.visit_all(right, inline=True)
-            line += " {op} {right}".format(op=operation, right=right)
+        for i in range(len(node.ops)):
+            operation = node.ops[i]
+            operation = CompareOperationDesc.OPERATION[operation.__class__]
+
+            right = self.visit_all(node.comparators[i], inline=True)
+
+            values = {
+                "left": left,
+                "op": operation,
+                "right": right,
+            }
+            line += "{left} {op} {right}".format(**values)
+
+            if i < len(node.ops) - 1:
+                left = right
+                line += " and "
 
         self.emit("({})".format(line))
 

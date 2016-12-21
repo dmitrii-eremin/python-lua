@@ -14,3 +14,9 @@ else:
 
 if a == 45:
     print("a == 45")
+
+x = 100
+if 50 < x < 150:
+    print("50 < x < 150")
+else:
+    print("Something wrong.")
