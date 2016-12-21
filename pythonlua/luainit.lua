@@ -6,6 +6,9 @@ string_meta.__add = function(v1, v2)
     return v1 + v2
 end
 
+local str = tostring
+local int = tonumber
+
 local function len(t)
     return #t
 end
