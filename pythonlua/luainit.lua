@@ -36,6 +36,23 @@ local function range(from, to, step)
 end
 
 local function list(t)
+    local methods = {}
+
+    local iterator_index = nil
+
+    setmetatable(t, {
+        __index = methods,
+        __call = function(self, _, idx)
+            if idx == nil and iterator_index ~= nil then
+                iterator_index = nil
+            end
+
+            local v = nil
+            iterator_index, v = next(t, iterator_index)
+
+            return v
+        end,
+    })
     return t
 end
 
@@ -45,9 +62,20 @@ function dict(t)
     methods.items = function()
          return pairs(t)
     end
+
+    local key_index = nil
     
     setmetatable(t, {
         __index = methods,
+        __call = function(self, _, idx)
+            if idx == nil and key_index ~= nil then
+                key_index = nil
+            end
+
+            key_index, _ = next(t, key_index)
+
+            return key_index
+        end,
     })
     
     return t
