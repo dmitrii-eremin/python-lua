@@ -8,8 +8,9 @@ from .nodevisitor import NodeVisitor
 
 class Translator:
     """Python to lua main class translator"""
-    def __init__(self, config=None):
+    def __init__(self, config=None, show_ast=False):
         config = config if config is not None else Config()
+        self.show_ast = show_ast
 
         self.output = []
 
@@ -19,13 +20,12 @@ class Translator:
 
         visitor = NodeVisitor()
 
-        # print(ast.dump(py_ast_tree))
+        if self.show_ast:
+            print(ast.dump(py_ast_tree))
 
         visitor.visit(py_ast_tree)
 
         self.output = visitor.output
-
-        # print(self.output)
 
         return self.to_code()
 

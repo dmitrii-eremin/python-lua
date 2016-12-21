@@ -12,6 +12,8 @@ def create_arg_parser():
     parser = ArgumentParser(description="Python to lua translator.")
     parser.add_argument("inputfilename", metavar="IF", type=str,
                         help="A python script filename to translate it.")
+    parser.add_argument("--show-ast", help="Print python ast tree before code.",
+                        dest="show_ast", action="store_true")
 
     return parser
 
@@ -33,7 +35,7 @@ def main():
     if not content:
         raise RuntimeError("The input file is empty.")
 
-    translator = Translator()
+    translator = Translator(show_ast=argv.show_ast)
     lua_code = translator.translate(content)
 
     print(translator.get_luainit())
