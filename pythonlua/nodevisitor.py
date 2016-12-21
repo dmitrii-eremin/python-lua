@@ -162,9 +162,24 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.visit_all(node.body)
 
+        body = self.output[-1]
+
         if node.args.vararg is not None:
             line = "local {name} = list {{...}}".format(name=node.args.vararg.arg)
-            self.output[-1].insert(0, line)
+            body.insert(0, line)
+
+        arg_index = -1
+        for i in reversed(node.args.defaults):
+            line = "{name} = {name} or {value}"
+
+            arg = node.args.args[arg_index]
+            values = {
+                "name": arg.arg,
+                "value": self.visit_all(i, inline=True),
+            }
+            body.insert(0, line.format(**values))
+
+            arg_index -= 1
 
         self.emit("end")
 
