@@ -149,10 +149,19 @@ class NodeVisitor(ast.NodeVisitor):
         name = node.name
         arguments = [arg.arg for arg in node.args.args]
 
+        if node.args.vararg is not None:
+            arguments.append("...")
+
         function_def = line.format(name=name, arguments=", ".join(arguments))
 
         self.emit(function_def)
+        
         self.visit_all(node.body)
+        
+        if node.args.vararg is not None:
+            line = "local {name} = {{...}}".format(name=node.args.vararg.arg)
+            self.output[-1].insert(0, line)
+
         self.emit("end")
 
     def visit_For(self, node):
@@ -272,6 +281,12 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit return"""
         line = "return "
         line += self.visit_all(node.value, inline=True)
+        self.emit(line)
+
+    def visit_Starred(self, node):
+        """Visit starred object"""
+        value = self.visit_all(node.value, inline=True)
+        line = "unpack({})".format(value)
         self.emit(line)
 
     def visit_Str(self, node):
