@@ -137,6 +137,10 @@ class NodeVisitor(ast.NodeVisitor):
         elements = ", ".join(elements)
         self.emit("dict {{{}}}".format(elements))
 
+    def visit_Ellipsis(self, node):
+        """Visit ellipsis"""
+        self.emit("...")
+
     def visit_Expr(self, node):
         """Visit expr"""
         output = self.visit_all(node.value)
