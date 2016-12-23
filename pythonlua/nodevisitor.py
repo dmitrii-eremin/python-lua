@@ -23,7 +23,7 @@ class NodeVisitor(ast.NodeVisitor):
         target = self.visit_all(node.targets[0], inline=True)
         value = self.visit_all(node.value, inline=True)
 
-        self.emit("local {target} = {value}".format(target=target, value=value))
+        self.emit("{target} = {value}".format(target=target, value=value))
 
     def visit_AugAssign(self, node):
         """Visit augassign"""
@@ -88,6 +88,20 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(line.format(name=name, arguments=", ".join(arguments)))
 
+    def visit_ClassDef(self, node):
+        """Visit class definition"""
+        bases = [self.visit_all(base, inline=True) for base in node.bases]
+
+        self.emit("{} = class(function(cls)".format(node.name))
+
+        self.context.push({"in_class": True})
+        self.visit_all(node.body)
+        self.context.pop()
+
+        self.output[-1].append("return cls")
+
+        self.emit("end, {{{}}})".format(", ".join(bases)))
+
     def visit_Compare(self, node):
         """Visit compare"""
 
@@ -148,9 +162,12 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         """Visit function definition"""
-        line = "local function {name}({arguments})"
+        line = "function {name}({arguments})"
 
         name = node.name
+        if self.context.last()["in_class"]:
+            name = "cls." + name        
+
         arguments = [arg.arg for arg in node.args.args]
 
         if node.args.vararg is not None:

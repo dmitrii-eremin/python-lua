@@ -1,3 +1,7 @@
+--[[
+    Begin the lua pythonization.
+--]]
+
 local string_meta = getmetatable("")
 string_meta.__add = function(v1, v2)
     if type(v1) == "string" and type(v2) == "string" then
@@ -109,3 +113,51 @@ function enumerate(t, start)
         return index + start - 1, value
     end
 end
+
+-- Lua classes
+local function class(class_init, bases)
+    bases = bases or {}
+
+    local c = {}
+    
+    for _, base in ipairs(bases) do
+        for k, v in pairs(base) do
+            c[k] = v
+        end
+    end
+
+    c._bases = bases
+    
+    c = class_init(c)
+    
+    local mt = getmetatable(c) or {}
+    mt.__call = function(_, ...)
+        local object = {}
+        
+        setmetatable(object, {
+            __index = function(tbl, idx)
+                local method = c[idx]
+                if type(method) == "function" then
+                    return function(...)
+                        return c[idx](object, ...) 
+                    end
+                end
+                
+                return method
+            end,
+        })
+    
+        if type(object.__init__) == "function" then
+            object.__init__(...)
+        end
+        
+        return object
+    end
+    
+    setmetatable(c, mt)
+    
+    return c
+end
+--[[
+    End of the lua pythonization.
+--]]

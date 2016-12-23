@@ -7,6 +7,7 @@ class Context:
     def __init__(self, values=None):
         values = values if values is not None else {
             "token_end_mode": TokenEndMode.LINE_FEED,
+            "in_class": False,
         }
 
         self.ctx_stack = [values]
