@@ -1,4 +1,5 @@
 """Class to store the python code context"""
+from .symbolsstack import SymbolsStack
 from .tokenendmode import TokenEndMode
 
 
@@ -8,6 +9,7 @@ class Context:
         values = values if values is not None else {
             "token_end_mode": TokenEndMode.LINE_FEED,
             "in_class": False,
+            "locals": SymbolsStack(),
         }
 
         self.ctx_stack = [values]

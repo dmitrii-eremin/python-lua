@@ -23,7 +23,17 @@ class NodeVisitor(ast.NodeVisitor):
         target = self.visit_all(node.targets[0], inline=True)
         value = self.visit_all(node.value, inline=True)
 
-        self.emit("{target} = {value}".format(target=target, value=value))
+        local_keyword = ""
+
+        last_ctx = self.context.last()
+        if "." not in target and not last_ctx["locals"].exists(target):
+            local_keyword = "local "
+            last_ctx["locals"].add_symbol(target)
+
+
+        self.emit("{local}{target} = {value}".format(local=local_keyword,
+                                                     target=target, 
+                                                     value=value))
 
     def visit_AugAssign(self, node):
         """Visit augassign"""
@@ -92,7 +102,18 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit class definition"""
         bases = [self.visit_all(base, inline=True) for base in node.bases]
 
-        self.emit("{} = class(function(cls)".format(node.name))
+        local_keyword = ""
+        last_ctx = self.context.last()
+        if not last_ctx["locals"].exists(node.name):
+            local_keyword = "local "
+            last_ctx["locals"].add_symbol(node.name)
+
+        values = {
+            "local": local_keyword,
+            "name": node.name,
+        }
+
+        self.emit("{local}{name} = class(function(cls)".format(**values))
 
         self.context.push({"in_class": True})
         self.visit_all(node.body)
@@ -162,10 +183,12 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         """Visit function definition"""
-        line = "function {name}({arguments})"
+        line = "{local}function {name}({arguments})"
+
+        last_ctx = self.context.last()
 
         name = node.name
-        if self.context.last()["in_class"]:
+        if last_ctx["in_class"]:
             name = "cls." + name        
 
         arguments = [arg.arg for arg in node.args.args]
@@ -173,7 +196,15 @@ class NodeVisitor(ast.NodeVisitor):
         if node.args.vararg is not None:
             arguments.append("...")
 
-        function_def = line.format(name=name, arguments=", ".join(arguments))
+        local_keyword = ""
+
+        if "." not in name and not last_ctx["locals"].exists(name):
+            local_keyword = "local "
+            last_ctx["locals"].add_symbol(name)
+
+        function_def = line.format(local=local_keyword,
+                                   name=name, 
+                                   arguments=", ".join(arguments))
 
         self.emit(function_def)
 
@@ -404,6 +435,11 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_all(self, nodes, inline=False):
         """Visit all nodes in the given list"""
+
+        if not inline:
+            last_ctx = self.context.last()
+            last_ctx["locals"].push()
+
         visitor = NodeVisitor(self.context)
 
         if isinstance(nodes, list):
@@ -415,6 +451,10 @@ class NodeVisitor(ast.NodeVisitor):
             visitor.visit(nodes)
             if not inline:
                 self.output.extend(visitor.output)
+
+        if not inline:
+            last_ctx = self.context.last()
+            last_ctx["locals"].pop()
 
         if inline:
             return " ".join(visitor.output)
