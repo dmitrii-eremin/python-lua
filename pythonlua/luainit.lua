@@ -114,6 +114,14 @@ function enumerate(t, start)
     end
 end
 
+local function staticmethod(old_fun)
+    local wrapper = function(first, ...)
+        return old_fun(...)
+    end
+
+    return wrapper
+end
+
 -- Lua classes
 local function class(class_init, bases)
     bases = bases or {}
