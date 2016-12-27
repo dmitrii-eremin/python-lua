@@ -2,3 +2,8 @@ Hello, my name is: Sparky!
 Hello, my name is: Barky!
 Bark! Bark! Bark!
 Bark! Bark! Bark!
+Animal.PLANET = 	Earth
+sparky.PLANET = 	Earth
+barky.PLANET = 	Earth
+Animal.PLANET = 	Mars
+sparky.PLANET = 	Mars

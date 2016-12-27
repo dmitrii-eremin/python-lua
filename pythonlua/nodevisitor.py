@@ -26,6 +26,10 @@ class NodeVisitor(ast.NodeVisitor):
         local_keyword = ""
 
         last_ctx = self.context.last()
+
+        if last_ctx["in_class"]:
+            target = "cls." + target
+
         if "." not in target and not last_ctx["locals"].exists(target):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(target)
@@ -189,7 +193,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         name = node.name
         if last_ctx["in_class"]:
-            name = "cls." + name        
+            name = "cls." + name
 
         arguments = [arg.arg for arg in node.args.args]
 
@@ -208,7 +212,9 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(function_def)
 
+        self.context.push({"in_class": False})
         self.visit_all(node.body)
+        self.context.pop()
 
         body = self.output[-1]
 

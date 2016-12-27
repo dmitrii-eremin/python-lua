@@ -1,4 +1,6 @@
 class Animal:
+    PLANET = "Earth"
+
     def __init__(self, name):
         self.name = name
 
@@ -22,3 +24,12 @@ sparky.say_hello()
 barky.say_hello()
 
 barky.bark()
+
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
+print("barky.PLANET = ", barky.PLANET)
+
+Animal.PLANET = "Mars"
+
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
