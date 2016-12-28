@@ -70,6 +70,9 @@ local function list(t)
             return v
         end,
     })
+
+    t.is_list = true
+
     return t
 end
 
@@ -94,6 +97,8 @@ function dict(t)
             return key_index
         end,
     })
+
+    t.is_dict = true
     
     return t
 end
@@ -120,6 +125,20 @@ local function staticmethod(old_fun)
     end
 
     return wrapper
+end
+
+local function operator_in(item, items)
+    if type(items) == "table" then
+        for v in items do
+            if v == item then
+                return true
+            end
+        end
+    elseif type(items) == "string" and type(item) == "string" then
+        return string.find(items, item, 1, true) ~= nil
+    end
+
+    return false
 end
 
 -- Lua classes
@@ -169,3 +188,4 @@ end
 --[[
     End of the lua pythonization.
 --]]
+

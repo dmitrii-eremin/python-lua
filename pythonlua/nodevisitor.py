@@ -147,10 +147,14 @@ class NodeVisitor(ast.NodeVisitor):
 
             values = {
                 "left": left,
-                "op": operation,
                 "right": right,
             }
-            line += "{left} {op} {right}".format(**values)
+
+            if isinstance(operation, str):
+                values["op"] = operation
+                line += "{left} {op} {right}".format(**values)
+            elif isinstance(operation, dict):
+                line += operation["format"].format(**values)
 
             if i < len(node.ops) - 1:
                 left = right
