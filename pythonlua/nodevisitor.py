@@ -27,8 +27,8 @@ class NodeVisitor(ast.NodeVisitor):
 
         last_ctx = self.context.last()
 
-        if last_ctx["in_class"]:
-            target = "cls." + target
+        if last_ctx["class_name"]:
+            target = ".".join([last_ctx["class_name"], target])
 
         if "." not in target and not last_ctx["locals"].exists(target):
             local_keyword = "local "
@@ -108,22 +108,27 @@ class NodeVisitor(ast.NodeVisitor):
 
         local_keyword = ""
         last_ctx = self.context.last()
-        if not last_ctx["locals"].exists(node.name):
+        if not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(node.name)
 
+        name = node.name
+        if last_ctx["class_name"]:
+            name = ".".join([last_ctx["class_name"], name])
+
         values = {
             "local": local_keyword,
-            "name": node.name,
+            "name": name,
+            "node_name": node.name,
         }
 
-        self.emit("{local}{name} = class(function(cls)".format(**values))
+        self.emit("{local}{name} = class(function({node_name})".format(**values))
 
-        self.context.push({"in_class": True})
+        self.context.push({"class_name": node.name})
         self.visit_all(node.body)
         self.context.pop()
 
-        self.output[-1].append("return cls")
+        self.output[-1].append("return {node_name}".format(**values))
 
         self.emit("end, {{{}}})".format(", ".join(bases)))
 
@@ -192,8 +197,8 @@ class NodeVisitor(ast.NodeVisitor):
         last_ctx = self.context.last()
 
         name = node.name
-        if last_ctx["in_class"]:
-            name = "cls." + name
+        if last_ctx["class_name"]:
+            name = ".".join([last_ctx["class_name"], name])
 
         arguments = [arg.arg for arg in node.args.args]
 
@@ -212,7 +217,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(function_def)
 
-        self.context.push({"in_class": False})
+        self.context.push({"class_name": ""})
         self.visit_all(node.body)
         self.context.pop()
 
