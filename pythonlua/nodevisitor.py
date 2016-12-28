@@ -8,6 +8,7 @@ from .nameconstdesc import NameConstantDesc
 from .unaryopdesc import UnaryOperationDesc
 
 from .context import Context
+from .loopcounter import LoopCounter
 from .tokenendmode import TokenEndMode
 
 
@@ -156,6 +157,12 @@ class NodeVisitor(ast.NodeVisitor):
                 line += " and "
 
         self.emit("({})".format(line))
+        
+    def visit_Continue(self, node):
+        """Visit continue"""
+        last_ctx = self.context.last()
+        line = "goto {}".format(last_ctx["loop_label_name"])
+        self.emit(line)
 
     def visit_Delete(self, node):
         """Visit delete"""
@@ -261,7 +268,16 @@ class NodeVisitor(ast.NodeVisitor):
         }
 
         self.emit(line.format(**values))
+
+        continue_label = LoopCounter.get_next()
+        self.context.push({
+            "loop_label_name": continue_label, 
+        })
         self.visit_all(node.body)
+        self.context.pop()
+
+        self.output[-1].append("::{}::".format(continue_label))
+
         self.emit("end")
         
     def visit_Global(self, node):
@@ -420,7 +436,14 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("while {} do".format(test))
 
+        continue_label = LoopCounter.get_next()
+        self.context.push({
+            "loop_label_name": continue_label, 
+        })
         self.visit_all(node.body)
+        self.context.pop()
+
+        self.output[-1].append("::{}::".format(continue_label))
 
         self.emit("end")
 
