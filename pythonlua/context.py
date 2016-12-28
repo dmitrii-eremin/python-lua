@@ -10,6 +10,7 @@ class Context:
             "token_end_mode": TokenEndMode.LINE_FEED,
             "class_name": "",
             "locals": SymbolsStack(),
+            "globals": SymbolsStack(),  # Not working yet
         }
 
         self.ctx_stack = [values]

@@ -263,6 +263,12 @@ class NodeVisitor(ast.NodeVisitor):
         self.emit(line.format(**values))
         self.visit_all(node.body)
         self.emit("end")
+        
+    def visit_Global(self, node):
+        """Visit globals"""
+        last_ctx = self.context.last()
+        for name in node.names:
+            last_ctx["globals"].add_symbol(name)
 
     def visit_If(self, node):
         """Visit if"""
