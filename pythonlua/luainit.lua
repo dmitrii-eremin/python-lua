@@ -14,6 +14,10 @@ local str = tostring
 local int = tonumber
 
 local function len(t)
+    if type(t._data) == "table" then
+        return #t._data
+    end
+
     return #t
 end
 
@@ -43,18 +47,20 @@ local function range(from, to, step)
 end
 
 local function list(t)
+    local result = {}
+ 
     local methods = {}
 
     methods.append = function(value)
-        table.insert(t, value)
+        table.insert(result._data, value)
     end
 
     local iterator_index = nil
 
-    setmetatable(t, {
+    setmetatable(result, {
         __index = function(self, index)
             if type(index) == "number" and index < 0 then
-                return rawget(t, #t + index + 1)
+                return rawget(result._data, #result._data + index + 1)
             end
 
             return methods[index]
@@ -65,22 +71,29 @@ local function list(t)
             end
 
             local v = nil
-            iterator_index, v = next(t, iterator_index)
+            iterator_index, v = next(result._data, iterator_index)
 
             return v
         end,
     })
 
-    t.is_list = true
+    result.is_list = true
 
-    return t
+    result._data = {}
+    for _, v in ipairs(t) do
+        table.insert(result._data, v)
+    end
+
+    return result
 end
 
 function dict(t)
+    local result = {}
+
     local methods = {}
     
     methods.items = function()
-         return pairs(t)
+         return pairs(result._data)
     end
 
     local key_index = nil
@@ -92,15 +105,20 @@ function dict(t)
                 key_index = nil
             end
 
-            key_index, _ = next(t, key_index)
+            key_index, _ = next(result._data, key_index)
 
             return key_index
         end,
     })
 
-    t.is_dict = true
+    result.is_dict = true
+
+    result._data = {}
+    for k, v in pairs(t) do
+        result._data[k] = v
+    end
     
-    return t
+    return result
 end
 
 function enumerate(t, start)
