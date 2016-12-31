@@ -48,6 +48,13 @@ end
 
 local function list(t)
     local result = {}
+
+    result.is_list = true
+
+    result._data = {}
+    for _, v in ipairs(t) do
+        table.insert(result._data, v)
+    end
  
     local methods = {}
 
@@ -65,6 +72,9 @@ local function list(t)
 
             return methods[index]
         end,
+        __newindex = function(self, index, value)
+            result._data[index] = value
+        end,
         __call = function(self, _, idx)
             if idx == nil and iterator_index ~= nil then
                 iterator_index = nil
@@ -77,18 +87,18 @@ local function list(t)
         end,
     })
 
-    result.is_list = true
-
-    result._data = {}
-    for _, v in ipairs(t) do
-        table.insert(result._data, v)
-    end
-
     return result
 end
 
 function dict(t)
     local result = {}
+
+    result.is_dict = true
+
+    result._data = {}
+    for k, v in pairs(t) do
+        result._data[k] = v
+    end
 
     local methods = {}
     
@@ -98,8 +108,13 @@ function dict(t)
 
     local key_index = nil
     
-    setmetatable(t, {
-        __index = methods,
+    setmetatable(result, {
+        __index = function(self, index)
+            return methods[index]
+        end,
+        __newindex = function(self, index, value)
+            result._data[index] = value
+        end,
         __call = function(self, _, idx)
             if idx == nil and key_index ~= nil then
                 key_index = nil
@@ -110,13 +125,6 @@ function dict(t)
             return key_index
         end,
     })
-
-    result.is_dict = true
-
-    result._data = {}
-    for k, v in pairs(t) do
-        result._data[k] = v
-    end
     
     return result
 end

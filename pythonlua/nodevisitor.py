@@ -192,6 +192,40 @@ class NodeVisitor(ast.NodeVisitor):
         elements = ", ".join(elements)
         self.emit("dict {{{}}}".format(elements))
 
+    def visit_DictComp(self, node):
+        """Visit dictionary comprehension"""
+        self.emit("(function()")
+        self.emit("local result = dict {}")
+
+        ends_count = 0
+
+        for comp in node.generators:
+            line = "for {target} in {iterator} do"
+            values = {
+                "target": self.visit_all(comp.target, inline=True),
+                "iterator": self.visit_all(comp.iter, inline=True),
+            }
+            line = line.format(**values)
+            self.emit(line)
+            ends_count += 1
+
+            for if_ in comp.ifs:
+                line = "if {} then".format(self.visit_all(if_, inline=True))
+                self.emit(line)
+                ends_count += 1
+
+        line = "result[{key}] = {value}"
+        values = {
+            "key": self.visit_all(node.key, inline=True),
+            "value": self.visit_all(node.value, inline=True),
+        }
+        self.emit(line.format(**values))
+
+        self.emit(" ".join(["end"] * ends_count))
+
+        self.emit("return result")
+        self.emit("end)()")
+
     def visit_Ellipsis(self, node):
         """Visit ellipsis"""
         self.emit("...")
