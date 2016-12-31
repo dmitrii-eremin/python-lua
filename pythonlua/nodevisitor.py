@@ -369,6 +369,37 @@ class NodeVisitor(ast.NodeVisitor):
         line = "list {{{}}}".format(", ".join(elements))
         self.emit(line)
 
+    def visit_ListComp(self, node):
+        """Visit list comprehension"""
+        self.emit("(function()")
+        self.emit("local result = list {}")
+
+        ends_count = 0
+
+        for comp in node.generators:
+            line = "for {target} in {iterator} do"
+            values = {
+                "target": self.visit_all(comp.target, inline=True),
+                "iterator": self.visit_all(comp.iter, inline=True),
+            }
+            line = line.format(**values)
+            self.emit(line)
+            ends_count += 1
+
+            for if_ in comp.ifs:
+                line = "if {} then".format(self.visit_all(if_, inline=True))
+                self.emit(line)
+                ends_count += 1
+
+        line = "result.append({})"
+        line = line.format(self.visit_all(node.elt, inline=True))
+        self.emit(line)
+
+        self.emit(" ".join(["end"] * ends_count))
+
+        self.emit("return result")
+        self.emit("end)()")
+
     def visit_Module(self, node):
         """Visit module"""
         self.visit_all(node.body)
