@@ -482,3 +482,183 @@ print(a, b, c)
 c = nil
 print(a, b, c)
 ```
+
+### Python list and dictionary comprehensions
+
+Python code:
+```
+a = [i * j for i in range(5) for j in range(3) if i * j % 2 == 0 and i > 0 and j > 0]
+
+for item in a:
+    print(item)
+
+b = {i: i ** 2 for i in range(5)}
+
+for k, v in b.items():
+    print(k, v)
+```
+
+Lua code:
+```
+local a = (function() local result = list {} for i in range(5) do for j in range(3) do if (((math.fmod((i * j), 2)) == 0) and (i > 0)) then result.append((i * j)) end end end return result end)()
+for item in a do
+    print(item)
+    ::loop_label_1::
+end
+local b = (function() local result = dict {} for i in range(5) do result[i] = (math.pow(i, 2)) end return result end)()
+for k, v in b.items() do
+    print(k, v)
+    ::loop_label_2::
+end
+```
+
+### Classes
+
+Python code:
+```
+class Animal:
+    PLANET = "Earth"
+
+    def __init__(self, name):
+        self.name = name
+
+    def say_hello(self):
+        print("Hello, my name is: " + self.name + "!")
+
+
+class Dog(Animal):
+    def say_hello(self):
+        print("Hello, my name is: " + self.name + "!")
+        self.bark()
+
+    def bark(self):
+        print("Bark! Bark! Bark!")
+
+
+sparky = Animal("Sparky")
+barky = Dog("Barky")
+
+sparky.say_hello()
+barky.say_hello()
+
+barky.bark()
+
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
+print("barky.PLANET = ", barky.PLANET)
+
+Animal.PLANET = "Mars"
+
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
+```
+
+Lua code:
+```
+local Animal = class(function(Animal)
+    Animal.PLANET = "Earth"
+    function Animal.__init__(self, name)
+        self.name = name
+    end
+    function Animal.say_hello(self)
+        print((("Hello, my name is: " + self.name) + "!"))
+    end
+    return Animal
+end, {})
+local Dog = class(function(Dog)
+    function Dog.say_hello(self)
+        print((("Hello, my name is: " + self.name) + "!"))
+        self.bark()
+    end
+    function Dog.bark(self)
+        print("Bark! Bark! Bark!")
+    end
+    return Dog
+end, {Animal})
+local sparky = Animal("Sparky")
+local barky = Dog("Barky")
+sparky.say_hello()
+barky.say_hello()
+barky.bark()
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
+print("barky.PLANET = ", barky.PLANET)
+Animal.PLANET = "Mars"
+print("Animal.PLANET = ", Animal.PLANET)
+print("sparky.PLANET = ", sparky.PLANET)
+```
+
+### Loops continue statement
+
+Python code:
+```
+for i in range(10):
+    if i == 5:
+        continue
+    for j in range(10):
+        if j == 7:
+            continue
+        print(i, " * ", j, " = ", i * j)
+```
+
+Lua code:
+```
+for i in range(10) do
+    if (i == 5) then
+        goto loop_label_1
+    end
+    for j in range(10) do
+        if (j == 7) then
+            goto loop_label_2
+        end
+        print(i, " * ", j, " = ", (i * j))
+        ::loop_label_2::
+    end
+    ::loop_label_1::
+end
+```
+
+### Operators `in` and `not in`
+
+Python code:
+```
+a = [1, 2, 3, 4]
+b = {
+    "name": "John",
+    "age": 42,
+}
+
+c = "Hello, world!"
+
+if 2 < 3:
+    print("2 < 3")
+
+print(1 in a)
+print(2 in a)
+print(5 in a)
+print("name" in b)
+print("surname" in b)
+print("Hell" in c)
+print("world" in c)
+print("Foo" in c)
+print("Hells" not in c)
+```
+
+Lua code:
+```
+local a = list {1, 2, 3, 4}
+local b = dict {["name"] = "John", ["age"] = 42}
+local c = "Hello, world!"
+if (2 < 3) then
+    print("2 < 3")
+end
+print((operator_in(1, a)))
+print((operator_in(2, a)))
+print((operator_in(5, a)))
+print((operator_in("name", b)))
+print((operator_in("surname", b)))
+print((operator_in("Hell", c)))
+print((operator_in("world", c)))
+print((operator_in("Foo", c)))
+print((not operator_in("Hells", c)))
+```
