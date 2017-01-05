@@ -4,7 +4,8 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
+
+from tempfile import mkstemp
 
 from colorama import init, Fore, Style
 
@@ -53,14 +54,17 @@ def make_test(filename):
         translator = Translator()
         lua_code = translator.translate(content)
 
-        tmp_file = tempfile.NamedTemporaryFile("w")
+        file_desc, filename = mkstemp()
+
+        tmp_file = os.fdopen(file_desc, "w")
         tmp_file.write(Translator.get_luainit()+ "\n")
         tmp_file.write(lua_code)
         tmp_file.flush()
+        tmp_file.close()
 
         output = []
 
-        proc = subprocess.Popen([LUA_PATH, tmp_file.name],
+        proc = subprocess.Popen([LUA_PATH, filename],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,)
         while True:
@@ -71,6 +75,15 @@ def make_test(filename):
                 output.append(line.decode("utf-8"))
 
         output = "".join(output)
+
+        os.remove(filename)
+
+        output = [item.strip() for item in output.split("\n")]
+        expected = [item.strip() for item in expected.split("\n")]
+
+        if output != expected:
+            print("output: ", output)
+            print("expected: ", expected)
 
         result = output == expected
     except RuntimeError:
