@@ -52,7 +52,8 @@ class Translator:
 
         return "\n".join(lines)
 
-    def get_luainit(self, filename="luainit.lua"):
+    @staticmethod
+    def get_luainit(filename="luainit.lua"):
         """Get lua initialization code."""
         script_name = os.path.realpath(__file__)
         folder = os.path.dirname(script_name)

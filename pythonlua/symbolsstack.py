@@ -5,7 +5,7 @@ class SymbolsStack:
     """Class for the symbols stack"""
     def __init__(self):
         self.symbols = [[]]
-        
+
     def add_symbol(self, name):
         """Add a new symbol to the curent stack"""
         self.symbols[-1].append(name)

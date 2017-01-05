@@ -38,7 +38,7 @@ def main():
     translator = Translator(show_ast=argv.show_ast)
     lua_code = translator.translate(content)
 
-    print(translator.get_luainit())
+    print(Translator.get_luainit())
     print(lua_code)
     return 0
 

@@ -54,7 +54,7 @@ def make_test(filename):
         lua_code = translator.translate(content)
 
         tmp_file = tempfile.NamedTemporaryFile("w")
-        tmp_file.write(translator.get_luainit()+ "\n")
+        tmp_file.write(Translator.get_luainit()+ "\n")
         tmp_file.write(lua_code)
         tmp_file.flush()
 

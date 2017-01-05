@@ -30,5 +30,3 @@ class Context:
         """Pop last context state"""
         assert len(self.ctx_stack) > 1, "Pop context failed. This is a last context in the stack."
         return self.ctx_stack.pop()
-
-

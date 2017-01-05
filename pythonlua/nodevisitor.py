@@ -37,7 +37,7 @@ class NodeVisitor(ast.NodeVisitor):
 
 
         self.emit("{local}{target} = {value}".format(local=local_keyword,
-                                                     target=target, 
+                                                     target=target,
                                                      value=value))
 
     def visit_AugAssign(self, node):
@@ -161,7 +161,7 @@ class NodeVisitor(ast.NodeVisitor):
                 line += " and "
 
         self.emit("({})".format(line))
-        
+
     def visit_Continue(self, node):
         """Visit continue"""
         last_ctx = self.context.last()
@@ -257,7 +257,7 @@ class NodeVisitor(ast.NodeVisitor):
             last_ctx["locals"].add_symbol(name)
 
         function_def = line.format(local=local_keyword,
-                                   name=name, 
+                                   name=name,
                                    arguments=", ".join(arguments))
 
         self.emit(function_def)
@@ -309,7 +309,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         continue_label = LoopCounter.get_next()
         self.context.push({
-            "loop_label_name": continue_label, 
+            "loop_label_name": continue_label,
         })
         self.visit_all(node.body)
         self.context.pop()
@@ -317,7 +317,7 @@ class NodeVisitor(ast.NodeVisitor):
         self.output[-1].append("::{}::".format(continue_label))
 
         self.emit("end")
-        
+
     def visit_Global(self, node):
         """Visit globals"""
         last_ctx = self.context.last()
@@ -507,7 +507,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         continue_label = LoopCounter.get_next()
         self.context.push({
-            "loop_label_name": continue_label, 
+            "loop_label_name": continue_label,
         })
         self.visit_all(node.body)
         self.context.pop()
@@ -528,7 +528,7 @@ class NodeVisitor(ast.NodeVisitor):
             line = ""
             if i.optional_vars is not None:
                 line = "local {} = "
-                line = line.format(self.visit_all(i.optional_vars, 
+                line = line.format(self.visit_all(i.optional_vars,
                                                   inline=True))
             line += self.visit_all(i.context_expr, inline=True)
             lines.append(line)
