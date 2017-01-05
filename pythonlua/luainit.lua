@@ -46,6 +46,15 @@ local function range(from, to, step)
     end
 end
 
+local g_real_unpack = unpack
+
+local unpack = function(t)
+    if type(t) == "table" and t.is_list then
+        return g_real_unpack(t._data)
+    end
+    return g_real_unpack(t)
+end
+
 local function list(t)
     local result = {}
 
@@ -66,8 +75,11 @@ local function list(t)
 
     setmetatable(result, {
         __index = function(self, index)
-            if type(index) == "number" and index < 0 then
-                return rawget(result._data, #result._data + index + 1)
+            if type(index) == "number" then
+                if index < 0 then
+                    index = #result._data + index + 1
+                end
+                return rawget(result._data, index)
             end
 
             return methods[index]
@@ -110,6 +122,9 @@ function dict(t)
     
     setmetatable(result, {
         __index = function(self, index)
+            if result._data[index] ~= nil then
+                return result._data[index]
+            end
             return methods[index]
         end,
         __newindex = function(self, index, value)
