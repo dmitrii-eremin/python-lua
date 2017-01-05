@@ -46,7 +46,7 @@ local function range(from, to, step)
     end
 end
 
-local g_real_unpack = unpack
+local g_real_unpack = unpack or table.unpack
 
 local unpack = function(t)
     if type(t) == "table" and t.is_list then
