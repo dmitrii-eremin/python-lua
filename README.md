@@ -10,16 +10,18 @@ Lua version: 5.2
 
 ### As a standalone application
 ```
-usage: __main__.py [-h] [--show-ast] IF
+usage: python-lua [-h] [--show-ast] [--only-lua-init] [--no-lua-init] [IF]
 
 Python to lua translator.
 
 positional arguments:
-  IF          A python script filename to translate it.
+  IF               A python script filename to translate it.
 
 optional arguments:
-  -h, --help  show this help message and exit
-  --show-ast  Print python ast tree before code.
+  -h, --help       show this help message and exit
+  --show-ast       Print python ast tree before code.
+  --only-lua-init  Print only lua initialization code.
+  --no-lua-init    Print lua code without lua init code.
 ```
 
 For example: ```python3 __main__py tests/iterlist.py```
