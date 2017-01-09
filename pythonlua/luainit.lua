@@ -13,7 +13,7 @@ end
 local g_real_unpack = unpack or table.unpack
 
 unpack = function(t)
-    if type(t) == "table" and t.is_list then
+    if type(t) == "table" and t._is_list then
         return g_real_unpack(t._data)
     end
     return g_real_unpack(t)
@@ -49,7 +49,7 @@ function bool(x)
     end
 
     if type(x) == "table" then
-        if x.is_list or x.is_dict then
+        if x._is_list or x._is_dict then
             return next(x._data) ~= nil
         end
     end
@@ -110,7 +110,7 @@ function enumerate(t, start)
     start = start or 0
 
     local data = t
-    if t.is_list then
+    if t._is_list then
         data = t._data
     end
 
@@ -132,7 +132,7 @@ setmetatable(list, {
     __call = function(_, t)
         local result = {}
 
-        result.is_list = true
+        result._is_list = true
 
         result._data = {}
         for _, v in ipairs(t) do
@@ -262,7 +262,7 @@ setmetatable(dict, {
     __call = function(_, t)
         local result = {}
 
-        result.is_dict = true
+        result._is_dict = true
 
         result._data = {}
         for k, v in pairs(t) do
@@ -334,7 +334,7 @@ setmetatable(dict, {
         end
 
         methods.update = function(t)
-            assert(t.is_dict)
+            assert(t._is_dict)
 
             for k, v in t.items() do
                 result._data[k] = v
