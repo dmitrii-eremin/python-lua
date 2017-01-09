@@ -11,7 +11,8 @@ def create_arg_parser():
     """Create and initialize an argument parser object"""
     parser = ArgumentParser(description="Python to lua translator.")
     parser.add_argument("inputfilename", metavar="IF", type=str,
-                        help="A python script filename to translate it.")
+                        help="A python script filename to translate it.",
+                        nargs="?", default="")
 
     parser.add_argument("--show-ast", help="Print python ast tree before code.",
                         dest="show_ast", action="store_true")
@@ -28,6 +29,12 @@ def main():
     parser = create_arg_parser()
     argv = parser.parse_args()
 
+    if not argv.no_lua_init:
+        print(Translator.get_luainit())
+
+    if argv.only_lua_init:
+        return 0
+
     input_filename = argv.inputfilename
     if not Path(input_filename).is_file():
         raise RuntimeError(
@@ -41,10 +48,7 @@ def main():
         raise RuntimeError("The input file is empty.")
 
     translator = Translator(show_ast=argv.show_ast)
-    lua_code = translator.translate(content)
-
-    if not argv.no_lua_init:
-        print(Translator.get_luainit())
+    lua_code = translator.translate(content)    
 
     if not argv.only_lua_init:
         print(lua_code)
