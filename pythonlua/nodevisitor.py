@@ -13,6 +13,8 @@ from .tokenendmode import TokenEndMode
 
 
 class NodeVisitor(ast.NodeVisitor):
+    LUACODE = "[[luacode]]"
+
     """Node visitor"""
     def __init__(self, context=None):
         self.context = context if context is not None else Context()
@@ -468,8 +470,13 @@ class NodeVisitor(ast.NodeVisitor):
         self.emit(line)
 
     def visit_Str(self, node):
-        """Visit str"""
-        self.emit('"{}"'.format(node.s))
+        """Visit str"""        
+        value = node.s
+        if value.startswith(NodeVisitor.LUACODE):
+            value = value[len(NodeVisitor.LUACODE):]
+            self.emit(value)
+        else:
+            self.emit('"{}"'.format(node.s))
 
     def visit_Subscript(self, node):
         """Visit subscript"""

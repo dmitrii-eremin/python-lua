@@ -169,6 +169,33 @@ print(a, b, c)
 
 ## Features
 
+### Insert lua code in the python
+You can start your string with the tag `[[luacode]]` to simply insert lua code in the python. For example,
+
+Python code:
+```
+def get_summ(a, b):
+    return a + b
+
+print(get_summ(3, 5))
+
+"""[[luacode]]
+local c = 45
+print(c)
+"""
+```
+
+Lua code:
+```
+local function get_summ(a, b)
+    return (a + b)
+end
+print(get_summ(3, 5))
+
+local c = 45
+print(c)
+```
+
 ### Simple math:  
 
 Python code:
