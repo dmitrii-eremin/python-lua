@@ -10,8 +10,70 @@ string_meta.__add = function(v1, v2)
     return v1 + v2
 end
 
-local str = tostring
+local g_real_unpack = unpack or table.unpack
+
+local unpack = function(t)
+    if type(t) == "table" and t.is_list then
+        return g_real_unpack(t._data)
+    end
+    return g_real_unpack(t)
+end
+
+local abs = math.abs
+local ascii = string.byte
+local chr = string.char
 local int = tonumber
+local str = tostring
+
+local function all(iterable)
+    for element in iterable do
+        if not element then
+            return false
+        end
+    end
+    return true
+end
+
+local function any(iterable)
+    for element in iterable do
+        if element then
+            return true
+        end
+    end
+    return false
+end
+
+local function bool(x)
+    if x == false or x == nil or x == 0 then
+        return false
+    end
+
+    if type(x) == "table" then
+        if x.is_list or x.is_dict then
+            return next(x._data) ~= nil
+        end
+    end
+
+    return true
+end 
+
+local function callable(x)
+    local x_type = type(x)
+    if x_type == "function" then
+        return true
+    end
+    if x_type == "table" then
+        local meta = getmetatable(x)
+        return type(meta.__call) == "function" 
+    end
+
+    return false
+end
+
+local function divmod(a, b)
+    local res = { math.floor(a / b), math.fmod(a, b) }
+    return unpack(res)
+end
 
 local function len(t)
     if type(t._data) == "table" then
@@ -63,15 +125,6 @@ local function enumerate(t, start)
 
         return index + start - 1, value
     end
-end
-
-local g_real_unpack = unpack or table.unpack
-
-local unpack = function(t)
-    if type(t) == "table" and t.is_list then
-        return g_real_unpack(t._data)
-    end
-    return g_real_unpack(t)
 end
 
 local list = {}
