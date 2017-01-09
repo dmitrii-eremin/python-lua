@@ -12,8 +12,13 @@ def create_arg_parser():
     parser = ArgumentParser(description="Python to lua translator.")
     parser.add_argument("inputfilename", metavar="IF", type=str,
                         help="A python script filename to translate it.")
+
     parser.add_argument("--show-ast", help="Print python ast tree before code.",
                         dest="show_ast", action="store_true")
+    parser.add_argument("--only-lua-init", help="Print only lua initialization code.",
+                        dest="only_lua_init", action="store_true")
+    parser.add_argument("--no-lua-init", help="Print lua code without lua init code.",
+                        dest="no_lua_init", action="store_true")
 
     return parser
 
@@ -38,8 +43,11 @@ def main():
     translator = Translator(show_ast=argv.show_ast)
     lua_code = translator.translate(content)
 
-    print(Translator.get_luainit())
-    print(lua_code)
+    if not argv.no_lua_init:
+        print(Translator.get_luainit())
+
+    if not argv.only_lua_init:
+        print(lua_code)
     return 0
 
 
