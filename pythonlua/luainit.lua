@@ -74,249 +74,255 @@ local unpack = function(t)
     return g_real_unpack(t)
 end
 
-local function list(t)
-    local result = {}
+local list = {}
+setmetatable(list, {
+    __call = function(_, t)
+        local result = {}
 
-    result.is_list = true
+        result.is_list = true
 
-    result._data = {}
-    for _, v in ipairs(t) do
-        table.insert(result._data, v)
-    end
- 
-    local methods = {}
+        result._data = {}
+        for _, v in ipairs(t) do
+            table.insert(result._data, v)
+        end
+    
+        local methods = {}
 
-    methods.append = function(value)
-        table.insert(result._data, value)
-    end
-
-    methods.extend = function(iterable)
-        for value in iterable do
+        methods.append = function(value)
             table.insert(result._data, value)
         end
-    end
 
-    methods.insert = function(index, value)
-        table.insert(result._data, index, value)
-    end
-
-    methods.remove = function(value)
-        for i, v in ipairs(result._data) do
-            if value == v then
-                table.remove(result._data, i)
-                break
-            end
-        end
-    end
-
-    methods.pop = function(index)
-        index = index or #result._data
-        local value = result._data[index]
-        table.remove(result._data, index)
-        return value
-    end
-
-    methods.clear = function()
-        result._data = {}
-    end
-
-    methods.index = function(value, start, end_)
-        start = start or 1
-        end_ = end_ or #result._data
-
-        for i = start, end_, 1 do
-            if result._data[i] == value then
-                return i
+        methods.extend = function(iterable)
+            for value in iterable do
+                table.insert(result._data, value)
             end
         end
 
-        return nil
-    end
-
-    methods.count = function(value)
-        local cnt = 0
-        for _, v in ipairs(result._data) do
-            if v == value then
-                cnt = cnt + 1
-            end
+        methods.insert = function(index, value)
+            table.insert(result._data, index, value)
         end
 
-        return cnt
-    end
-
-    methods.sort = function(key, reverse)
-        key = key or nil
-        reverse = reverse or false
-
-        table.sort(result._data, function(a, b)
-            if reverse then
-                return a < b
-            end
-
-            return a > b
-        end)
-    end
-
-    methods.reverse = function()
-        local new_data = {}
-        for i = #result._data, 1, -1 do
-            table.insert(new_data, result._data[i])
-        end
-
-        result._data = new_data
-    end
-
-    methods.copy = function()
-        return list(result._data)
-    end
-
-    local iterator_index = nil
-
-    setmetatable(result, {
-        __index = function(self, index)
-            if type(index) == "number" then
-                if index < 0 then
-                    index = #result._data + index
+        methods.remove = function(value)
+            for i, v in ipairs(result._data) do
+                if value == v then
+                    table.remove(result._data, i)
+                    break
                 end
-                return rawget(result._data, index + 1)
+            end
+        end
+
+        methods.pop = function(index)
+            index = index or #result._data
+            local value = result._data[index]
+            table.remove(result._data, index)
+            return value
+        end
+
+        methods.clear = function()
+            result._data = {}
+        end
+
+        methods.index = function(value, start, end_)
+            start = start or 1
+            end_ = end_ or #result._data
+
+            for i = start, end_, 1 do
+                if result._data[i] == value then
+                    return i
+                end
             end
 
-            return methods[index]
-        end,
-        __newindex = function(self, index, value)
-            result._data[index] = value
-        end,
-        __call = function(self, _, idx)
-            if idx == nil and iterator_index ~= nil then
-                iterator_index = nil
+            return nil
+        end
+
+        methods.count = function(value)
+            local cnt = 0
+            for _, v in ipairs(result._data) do
+                if v == value then
+                    cnt = cnt + 1
+                end
             end
 
-            local v = nil
-            iterator_index, v = next(result._data, iterator_index)
+            return cnt
+        end
 
-            return v
-        end,
-    })
+        methods.sort = function(key, reverse)
+            key = key or nil
+            reverse = reverse or false
 
-    return result
-end
+            table.sort(result._data, function(a, b)
+                if reverse then
+                    return a < b
+                end
 
-local function dict(t)
-    local result = {}
+                return a > b
+            end)
+        end
 
-    result.is_dict = true
+        methods.reverse = function()
+            local new_data = {}
+            for i = #result._data, 1, -1 do
+                table.insert(new_data, result._data[i])
+            end
 
-    result._data = {}
-    for k, v in pairs(t) do
-        result._data[k] = v
-    end
+            result._data = new_data
+        end
 
-    local methods = {}
+        methods.copy = function()
+            return list(result._data)
+        end
 
-    local key_index = nil
+        local iterator_index = nil
 
-    methods.clear = function()
+        setmetatable(result, {
+            __index = function(self, index)
+                if type(index) == "number" then
+                    if index < 0 then
+                        index = #result._data + index
+                    end
+                    return rawget(result._data, index + 1)
+                end
+
+                return methods[index]
+            end,
+            __newindex = function(self, index, value)
+                result._data[index] = value
+            end,
+            __call = function(self, _, idx)
+                if idx == nil and iterator_index ~= nil then
+                    iterator_index = nil
+                end
+
+                local v = nil
+                iterator_index, v = next(result._data, iterator_index)
+
+                return v
+            end,
+        })
+
+        return result
+    end,
+})
+
+local dict = {}
+setmetatable(dict, {
+    __call = function(_, t)
+        local result = {}
+
+        result.is_dict = true
+
         result._data = {}
-    end
-
-    methods.copy = function()
-        return dict(result._data)
-    end
-
-    methods.get = function(key, default)
-        default = default or nil
-        if result._data[key] == nil then
-            return default
+        for k, v in pairs(t) do
+            result._data[k] = v
         end
 
-        return result._data[key]
-    end
+        local methods = {}
 
-    methods.items = function()
-        return pairs(result._data)
-    end
+        local key_index = nil
 
-    methods.keys = function()
-        return function(self, idx, _) 
-            if idx == nil and key_index ~= nil then
-                key_index = nil
+        methods.clear = function()
+            result._data = {}
+        end
+
+        methods.copy = function()
+            return dict(result._data)
+        end
+
+        methods.get = function(key, default)
+            default = default or nil
+            if result._data[key] == nil then
+                return default
             end
 
-            key_index, _ = next(result._data, key_index)
-            return key_index
+            return result._data[key]
         end
-    end
 
-    methods.pop = function(key, default)
-        default = default or nil
-        if result._data[key] ~= nil then
-            local value = result._data[key]
-            result._data[key] = nil 
+        methods.items = function()
+            return pairs(result._data)
+        end
+
+        methods.keys = function()
+            return function(self, idx, _) 
+                if idx == nil and key_index ~= nil then
+                    key_index = nil
+                end
+
+                key_index, _ = next(result._data, key_index)
+                return key_index
+            end
+        end
+
+        methods.pop = function(key, default)
+            default = default or nil
+            if result._data[key] ~= nil then
+                local value = result._data[key]
+                result._data[key] = nil 
+                return key, value
+            end
+
+            return key, default
+        end
+
+        methods.popitem = function()
+            local key, value = next(result._data)
+            if key ~= nil then
+                result._data[key] = nil
+            end
+
             return key, value
         end
 
-        return key, default
-    end
-
-    methods.popitem = function()
-        local key, value = next(result._data)
-        if key ~= nil then
-            result._data[key] = nil
-        end
-
-        return key, value
-    end
-
-    methods.setdefault = function(key, default)
-        if result._data[key] == nil then
-            result._data[key] = default
-        end
-
-        return result._data[key]
-    end
-
-    methods.update = function(t)
-        assert(t.is_dict)
-
-        for k, v in t.items() do
-            result._data[k] = v
-        end
-    end
-
-    methods.values = function()
-        return function(self, idx, _) 
-            if idx == nil and key_index ~= nil then
-                key_index = nil
+        methods.setdefault = function(key, default)
+            if result._data[key] == nil then
+                result._data[key] = default
             end
 
-            key_index, value = next(result._data, key_index)
-            return value
+            return result._data[key]
         end
-    end
-    
-    setmetatable(result, {
-        __index = function(self, index)
-            if result._data[index] ~= nil then
-                return result._data[index]
-            end
-            return methods[index]
-        end,
-        __newindex = function(self, index, value)
-            result._data[index] = value
-        end,
-        __call = function(self, _, idx)
-            if idx == nil and key_index ~= nil then
-                key_index = nil
-            end
 
-            key_index, _ = next(result._data, key_index)
+        methods.update = function(t)
+            assert(t.is_dict)
 
-            return key_index            
-        end,
-    })
-    
-    return result
-end
+            for k, v in t.items() do
+                result._data[k] = v
+            end
+        end
+
+        methods.values = function()
+            return function(self, idx, _) 
+                if idx == nil and key_index ~= nil then
+                    key_index = nil
+                end
+
+                key_index, value = next(result._data, key_index)
+                return value
+            end
+        end
+        
+        setmetatable(result, {
+            __index = function(self, index)
+                if result._data[index] ~= nil then
+                    return result._data[index]
+                end
+                return methods[index]
+            end,
+            __newindex = function(self, index, value)
+                result._data[index] = value
+            end,
+            __call = function(self, _, idx)
+                if idx == nil and key_index ~= nil then
+                    key_index = nil
+                end
+
+                key_index, _ = next(result._data, key_index)
+
+                return key_index            
+            end,
+        })
+        
+        return result
+    end,
+})
 
 local function staticmethod(old_fun)
     local wrapper = function(first, ...)
