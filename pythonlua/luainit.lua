@@ -26,23 +26,42 @@ local function range(from, to, step)
     
     if to == nil then
         to = from
-        from = 1        
+        from = 0        
     end
-    
-    if step == nil then
-        step = to > from and 1 or -1
-    end
+
+    step = step or 1
 
     local i = from
     
     return function()
         ret = i
-        if (step > 0 and i > to) or (step < 0 and i < to) then
+        if (step > 0 and i >= to) or (step < 0 and i <= to) then
             return nil
         end
         
         i = i + step
         return ret
+    end
+end
+
+local function enumerate(t, start)
+    start = start or 0
+
+    local data = t
+    if t.is_list then
+        data = t._data
+    end
+
+    local i, v = next(data, nil)
+    return function()
+        local index, value = i, v
+        i, v = next(data, i)
+
+        if index == nil then
+            return nil
+        end
+
+        return index + start - 1, value
     end
 end
 
@@ -157,9 +176,9 @@ local function list(t)
         __index = function(self, index)
             if type(index) == "number" then
                 if index < 0 then
-                    index = #result._data + index + 1
+                    index = #result._data + index
                 end
-                return rawget(result._data, index)
+                return rawget(result._data, index + 1)
             end
 
             return methods[index]
@@ -182,7 +201,7 @@ local function list(t)
     return result
 end
 
-function dict(t)
+local function dict(t)
     local result = {}
 
     result.is_dict = true
@@ -222,22 +241,6 @@ function dict(t)
     })
     
     return result
-end
-
-function enumerate(t, start)
-    start = start or 1
-
-    local i, v = next(t, nil)
-    return function()
-        local index, value = i, v
-        i, v = next(t, i)
-
-        if index == nil then
-            return nil
-        end
-
-        return index + start - 1, value
-    end
 end
 
 local function staticmethod(old_fun)
