@@ -212,12 +212,87 @@ local function dict(t)
     end
 
     local methods = {}
-    
-    methods.items = function()
-         return pairs(result._data)
-    end
 
     local key_index = nil
+
+    methods.clear = function()
+        result._data = {}
+    end
+
+    methods.copy = function()
+        return dict(result._data)
+    end
+
+    methods.get = function(key, default)
+        default = default or nil
+        if result._data[key] == nil then
+            return default
+        end
+
+        return result._data[key]
+    end
+
+    methods.items = function()
+        return pairs(result._data)
+    end
+
+    methods.keys = function()
+        return function(self, idx, _) 
+            if idx == nil and key_index ~= nil then
+                key_index = nil
+            end
+
+            key_index, _ = next(result._data, key_index)
+            return key_index
+        end
+    end
+
+    methods.pop = function(key, default)
+        default = default or nil
+        if result._data[key] ~= nil then
+            local value = result._data[key]
+            result._data[key] = nil 
+            return key, value
+        end
+
+        return key, default
+    end
+
+    methods.popitem = function()
+        local key, value = next(result._data)
+        if key ~= nil then
+            result._data[key] = nil
+        end
+
+        return key, value
+    end
+
+    methods.setdefault = function(key, default)
+        if result._data[key] == nil then
+            result._data[key] = default
+        end
+
+        return result._data[key]
+    end
+
+    methods.update = function(t)
+        assert(t.is_dict)
+
+        for k, v in t.items() do
+            result._data[k] = v
+        end
+    end
+
+    methods.values = function()
+        return function(self, idx, _) 
+            if idx == nil and key_index ~= nil then
+                key_index = nil
+            end
+
+            key_index, value = next(result._data, key_index)
+            return value
+        end
+    end
     
     setmetatable(result, {
         __index = function(self, index)
@@ -236,7 +311,7 @@ local function dict(t)
 
             key_index, _ = next(result._data, key_index)
 
-            return key_index
+            return key_index            
         end,
     })
     
