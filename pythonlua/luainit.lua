@@ -12,20 +12,20 @@ end
 
 local g_real_unpack = unpack or table.unpack
 
-local unpack = function(t)
+unpack = function(t)
     if type(t) == "table" and t.is_list then
         return g_real_unpack(t._data)
     end
     return g_real_unpack(t)
 end
 
-local abs = math.abs
-local ascii = string.byte
-local chr = string.char
-local int = tonumber
-local str = tostring
+abs = math.abs
+ascii = string.byte
+chr = string.char
+int = tonumber
+str = tostring
 
-local function all(iterable)
+function all(iterable)
     for element in iterable do
         if not element then
             return false
@@ -34,7 +34,7 @@ local function all(iterable)
     return true
 end
 
-local function any(iterable)
+function any(iterable)
     for element in iterable do
         if element then
             return true
@@ -43,7 +43,7 @@ local function any(iterable)
     return false
 end
 
-local function bool(x)
+function bool(x)
     if x == false or x == nil or x == 0 then
         return false
     end
@@ -57,7 +57,7 @@ local function bool(x)
     return true
 end 
 
-local function callable(x)
+function callable(x)
     local x_type = type(x)
     if x_type == "function" then
         return true
@@ -70,12 +70,12 @@ local function callable(x)
     return false
 end
 
-local function divmod(a, b)
+function divmod(a, b)
     local res = { math.floor(a / b), math.fmod(a, b) }
     return unpack(res)
 end
 
-local function len(t)
+function len(t)
     if type(t._data) == "table" then
         return #t._data
     end
@@ -83,7 +83,7 @@ local function len(t)
     return #t
 end
 
-local function range(from, to, step)
+function range(from, to, step)
     assert(from ~= nil)
     
     if to == nil then
@@ -106,7 +106,7 @@ local function range(from, to, step)
     end
 end
 
-local function enumerate(t, start)
+function enumerate(t, start)
     start = start or 0
 
     local data = t
@@ -127,7 +127,7 @@ local function enumerate(t, start)
     end
 end
 
-local list = {}
+list = {}
 setmetatable(list, {
     __call = function(_, t)
         local result = {}
@@ -257,7 +257,7 @@ setmetatable(list, {
     end,
 })
 
-local dict = {}
+dict = {}
 setmetatable(dict, {
     __call = function(_, t)
         local result = {}
@@ -377,7 +377,7 @@ setmetatable(dict, {
     end,
 })
 
-local function staticmethod(old_fun)
+function staticmethod(old_fun)
     local wrapper = function(first, ...)
         return old_fun(...)
     end
@@ -385,7 +385,7 @@ local function staticmethod(old_fun)
     return wrapper
 end
 
-local function operator_in(item, items)
+function operator_in(item, items)
     if type(items) == "table" then
         for v in items do
             if v == item then
@@ -400,7 +400,7 @@ local function operator_in(item, items)
 end
 
 -- Lua classes
-local function class(class_init, bases)
+function class(class_init, bases)
     bases = bases or {}
 
     local c = {}
