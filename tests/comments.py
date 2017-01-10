@@ -8,7 +8,7 @@ def foo():
     """Function-level docstring"""
     pass
 
-name = "John Parrish"
+name = "John " + "Parrish"
 
 print(name)
 print("Hello!")

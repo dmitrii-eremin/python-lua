@@ -240,7 +240,14 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_Expr(self, node):
         """Visit expr"""
+        expr_is_docstring = False
+        if isinstance(node.value, ast.Str):
+            expr_is_docstring = True
+
+        self.context.push({"docstring": expr_is_docstring})
         output = self.visit_all(node.value)
+        self.context.pop()
+
         self.output.append(output)
 
     def visit_FunctionDef(self, node):
