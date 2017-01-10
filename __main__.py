@@ -33,7 +33,7 @@ def main():
     parser = create_arg_parser()
     argv = parser.parse_args()
 
-    if not argv.no_lua_init:
+    if not argv.no_lua_init and not argv.show_ast:
         print(Translator.get_luainit())
 
     if argv.only_lua_init:
@@ -55,7 +55,7 @@ def main():
                             show_ast=argv.show_ast)
     lua_code = translator.translate(content)
 
-    if not argv.only_lua_init:
+    if not argv.only_lua_init and not argv.show_ast:
         print(lua_code)
     return 0
 
