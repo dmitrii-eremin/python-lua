@@ -12,6 +12,7 @@ class Context:
             "locals": SymbolsStack(),
             "globals": SymbolsStack(),  # Not working yet
             "loop_label_name": "",
+            "docstring": False,
         }
 
         self.ctx_stack = [values]

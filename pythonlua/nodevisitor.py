@@ -476,11 +476,13 @@ class NodeVisitor(ast.NodeVisitor):
         self.emit(line)
 
     def visit_Str(self, node):
-        """Visit str"""        
+        """Visit str"""
         value = node.s
         if value.startswith(NodeVisitor.LUACODE):
             value = value[len(NodeVisitor.LUACODE):]
             self.emit(value)
+        elif self.context.last()["docstring"]:
+            self.emit('--[[ {} ]]'.format(node.s))
         else:
             self.emit('"{}"'.format(node.s))
 
