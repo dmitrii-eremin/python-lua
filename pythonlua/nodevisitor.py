@@ -16,8 +16,9 @@ class NodeVisitor(ast.NodeVisitor):
     LUACODE = "[[luacode]]"
 
     """Node visitor"""
-    def __init__(self, context=None):
+    def __init__(self, context=None, config=None):
         self.context = context if context is not None else Context()
+        self.config = config
         self.last_end_mode = TokenEndMode.LINE_FEED
         self.output = []
 
@@ -134,6 +135,11 @@ class NodeVisitor(ast.NodeVisitor):
         self.output[-1].append("return {node_name}".format(**values))
 
         self.emit("end, {{{}}})".format(", ".join(bases)))
+
+        # Return class object only in the top-level classes.
+        # Not in the nested classes.
+        if self.config["class"]["return_at_the_end"] and not last_ctx["class_name"]:
+            self.emit("return {}".format(name))
 
     def visit_Compare(self, node):
         """Visit compare"""
@@ -556,7 +562,7 @@ class NodeVisitor(ast.NodeVisitor):
             last_ctx = self.context.last()
             last_ctx["locals"].push()
 
-        visitor = NodeVisitor(self.context)
+        visitor = NodeVisitor(context=self.context, config=self.config)
 
         if isinstance(nodes, list):
             for node in nodes:

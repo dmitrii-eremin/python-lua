@@ -9,7 +9,7 @@ from .nodevisitor import NodeVisitor
 class Translator:
     """Python to lua main class translator"""
     def __init__(self, config=None, show_ast=False):
-        config = config if config is not None else Config()
+        self.config = config if config is not None else Config()
         self.show_ast = show_ast
 
         self.output = []
@@ -18,7 +18,7 @@ class Translator:
         """Translate python code to lua code"""
         py_ast_tree = ast.parse(pycode)
 
-        visitor = NodeVisitor()
+        visitor = NodeVisitor(config=self.config)
 
         if self.show_ast:
             print(ast.dump(py_ast_tree))

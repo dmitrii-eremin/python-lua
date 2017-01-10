@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 import sys
 
+from pythonlua.config import Config
 from pythonlua.translator import Translator
 
 
@@ -13,6 +14,9 @@ def create_arg_parser():
     parser.add_argument("inputfilename", metavar="IF", type=str,
                         help="A python script filename to translate it.",
                         nargs="?", default="")
+    parser.add_argument("configfilename", metavar="CONFIG", type=str,
+                        help="Translator configuration file in yaml format.",
+                        nargs="?", default=".pyluaconf.yaml")
 
     parser.add_argument("--show-ast", help="Print python ast tree before code.",
                         dest="show_ast", action="store_true")
@@ -47,8 +51,9 @@ def main():
     if not content:
         raise RuntimeError("The input file is empty.")
 
-    translator = Translator(show_ast=argv.show_ast)
-    lua_code = translator.translate(content)    
+    translator = Translator(Config(argv.configfilename),
+                            show_ast=argv.show_ast)
+    lua_code = translator.translate(content)
 
     if not argv.only_lua_init:
         print(lua_code)
