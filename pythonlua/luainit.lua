@@ -175,11 +175,11 @@ setmetatable(list, {
             result._data = {}
         end
 
-        methods.index = function(value, start, end_)
+        methods.index = function(value, start, enda)
             start = start or 1
-            end_ = end_ or #result._data
+            enda = enda or #result._data
 
-            for i = start, end_, 1 do
+            for i = start, enda, 1 do
                 if result._data[i] == value then
                     return i
                 end
@@ -378,11 +378,7 @@ setmetatable(dict, {
 })
 
 function staticmethod(old_fun)
-    local wrapper = function(first, ...)
-        return old_fun(...)
-    end
-
-    return wrapper
+    return old_fun
 end
 
 function operator_in(item, items)
@@ -400,7 +396,7 @@ function operator_in(item, items)
 end
 
 -- Lua classes
-function class(class_init, bases)
+function class(class_init, bases, mtmethods, properties)
     bases = bases or {}
 
     local c = {}
@@ -415,34 +411,83 @@ function class(class_init, bases)
     
     c = class_init(c)
     
+    c.properties = properties
+
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
-        
-        setmetatable(object, {
-            __index = function(tbl, idx)
-                local method = c[idx]
-                if type(method) == "function" then
-                    return function(...)
-                        return c[idx](object, ...) 
-                    end
+
+        nmt = {}
+        for k,v in pairs(c.mtmethods) do
+            nmt[k] = c[v]
+        end
+        nmt.__index = function(tbl, idx)
+            local method = c[idx]
+
+            if type(method) == "function" then
+                return function(...)
+                    return c[idx](object, ...)
                 end
-                
-                return method
-            end,
-        })
-    
+            end
+
+            if (c.properties[idx]) then
+                return method.gfunc(object)
+            end
+            return method
+        end
+        nmt.__newindex = function(tbl, idx, new)
+            local method = c[idx]
+            if (c.properties[idx]) then
+                return method.sfunc(object,new)
+            end
+            rawset(tbl,idx,new)
+        end
+        setmetatable(object, nmt)
+
         if type(object.__init__) == "function" then
             object.__init__(...)
         end
         
         return object
     end
-    
+    c.mtmethods = mtmethods
+
     setmetatable(c, mt)
     
     return c
 end
+-- properties implemented by class object / decorator. Requires as well a properties list
+-- on the main class for __index and __newindex referral.
+property = class(function(property)
+    function property.__init__(self,gfunc,sfunc)
+        self.gfunc = gfunc
+        self.sfunc = sfunc
+    end
+    function property.getter(self,gfunc)
+        self.gfunc = gfunc
+        return self
+    end
+    function property.setter(self,sfunc)
+        self.sfunc = sfunc
+        return self
+    end
+    return property
+end, {}, {}, {})
+
+-- strings in python have methods, so we need to classify strings in lua
+String = class(function(String)
+    function String.__init__(self,str)
+        self._str = str
+    end
+    function String.__str__(self)
+        return self._str
+    end
+    function String.concat(str1,str2)
+        return String(str1._str .. str2._str)
+    end
+    return String
+end, {}, {__tostring = "__str__", __add = "concat" }, {})
+
 --[[
     End of the lua pythonization.
 --]]

@@ -11,7 +11,6 @@ from .context import Context
 from .loopcounter import LoopCounter
 from .tokenendmode import TokenEndMode
 
-
 class NodeVisitor(ast.NodeVisitor):
     LUACODE = "[[luacode]]"
 
@@ -34,7 +33,7 @@ class NodeVisitor(ast.NodeVisitor):
         if last_ctx["class_name"]:
             target = ".".join([last_ctx["class_name"], target])
 
-        if "." not in target and not last_ctx["locals"].exists(target):
+        if not self.context.top() and "." not in target and not last_ctx["locals"].exists(target):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(target)
 
@@ -112,7 +111,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         local_keyword = ""
         last_ctx = self.context.last()
-        if not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name):
+        if not self.context.top() and not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(node.name)
 
@@ -120,10 +119,31 @@ class NodeVisitor(ast.NodeVisitor):
         if last_ctx["class_name"]:
             name = ".".join([last_ctx["class_name"], name])
 
+        # create metatable methods for operator overloading
+        mtmethods = {}
+        properties = {}
+        for nnode in node.body:
+            if type(nnode) == ast.FunctionDef:
+                try: dl = [decorator.id for decorator in reversed(nnode.decorator_list)]
+                except: pass
+                if "property" in dl:
+                    properties[nnode.name] = '\"{}\"'.format(".".join([name, nnode.name]))
+                if nnode.name in ["__add__","__sub__",
+                                  "__eq__","__ne__",
+                                  "__lt__","__le__","__gt__","__ge__",
+                                  "__mul__","__div__",
+                                  "__mod__","__pow__",
+                                  "__len__",
+                                  "__gc__"]:  # the GC module does not work in python, but it does in lua!
+                    mtmethods[nnode.name.rstrip("_")] = "\"{}\"".format(nnode.name)
+
+        mtmethods = ", ".join(["{} = {}".format(key,mtmethods[key]) for key in mtmethods])
+        properties = ", ".join(["{} = {}".format(key,properties[key]) for key in properties])
         values = {
             "local": local_keyword,
             "name": name,
             "node_name": node.name,
+            "mtmethods": mtmethods
         }
 
         self.emit("{local}{name} = class(function({node_name})".format(**values))
@@ -134,7 +154,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.output[-1].append("return {node_name}".format(**values))
 
-        self.emit("end, {{{}}})".format(", ".join(bases)))
+        self.emit("end, {{{}}}, {{{}}}, {{{}}})".format(", ".join(bases),mtmethods,properties))
 
         # Return class object only in the top-level classes.
         # Not in the nested classes.
@@ -190,7 +210,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         for key in node.keys:
             value = self.visit_all(key, inline=True)
-            if isinstance(key, ast.Str):
+            if isinstance(key, ast.Str) or isinstance(key, ast.Name):
                 value = "[{}]".format(value)
             keys.append(value)
 
@@ -252,12 +272,32 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         """Visit function definition"""
-        line = "{local}function {name}({arguments})"
 
         last_ctx = self.context.last()
+        # check for decorators and implement them directly on the function.
+        # This is required for python decorator properties to work.
+        line = 'function({arguments})'
+        end = 'end'
+        decorator_name = ''
+        for decorator in reversed(node.decorator_list):
+            decorator_name = self.visit_all(decorator, inline=True)
+            # make sure that it uses methods instead of global functions when they are available
+            if last_ctx["methods"].exists(decorator_name.split(".")[0]) and last_ctx["class_name"]:
+                decorator_name = ".".join([last_ctx["class_name"],decorator_name])
+            # add the decorator to the function definition.
+            line = '{}({}'.format(decorator_name,line)
+            end = '{})'.format(end)
+
+        if decorator_name:
+            line = "{local}{name} = "+line
+        else:
+            # if there is no decorator then we can define the function normally
+            line = "{local}function {name}({arguments})"
+
 
         name = node.name
         if last_ctx["class_name"]:
+            last_ctx["methods"].add_symbol(name)
             name = ".".join([last_ctx["class_name"], name])
 
         arguments = [arg.arg for arg in node.args.args]
@@ -267,7 +307,9 @@ class NodeVisitor(ast.NodeVisitor):
 
         local_keyword = ""
 
-        if "." not in name and not last_ctx["locals"].exists(name):
+        # added the top function for the context, since we want things in the topmost layer to be defined globally
+        # I should probably add something in config for it but at the moment I am too lazy.
+        if not self.context.top() and "." not in name and not last_ctx["locals"].exists(name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(name)
 
@@ -300,16 +342,9 @@ class NodeVisitor(ast.NodeVisitor):
 
             arg_index -= 1
 
-        self.emit("end")
+        # the end variable also closes parameters for possible decorators.
+        self.emit(end)
 
-        for decorator in reversed(node.decorator_list):
-            decorator_name = self.visit_all(decorator, inline=True)
-            values = {
-                "name": name,
-                "decorator": decorator_name,
-            }
-            line = "{name} = {decorator}({name})".format(**values)
-            self.emit(line)
 
     def visit_For(self, node):
         """Visit for loop"""
@@ -380,7 +415,7 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_Import(self, node):
         """Visit import"""
-        line = 'local {asname} = require "{name}"'
+        line = 'local {asname} = require("{name}")'
         values = {"asname": "", "name": ""}
 
         if node.names[0].asname is None:
@@ -391,6 +426,12 @@ class NodeVisitor(ast.NodeVisitor):
             values["asname"] = node.names[0].asname
             values["name"] = node.names[0].name
 
+        self.emit(line.format(**values))
+
+    def visit_ImportFrom(self, node):
+        """Visit import"""
+        line = 'require("{module}")'
+        values = {"module": node.module }
         self.emit(line.format(**values))
 
     def visit_Index(self, node):
@@ -491,7 +532,7 @@ class NodeVisitor(ast.NodeVisitor):
         elif self.context.last()["docstring"]:
             self.emit('--[[ {} ]]'.format(node.s))
         else:
-            self.emit('"{}"'.format(node.s))
+            self.emit('String("{}")'.format(node.s))
 
     def visit_Subscript(self, node):
         """Visit subscript"""

@@ -4,12 +4,13 @@ import os
 
 from .config import Config
 from .nodevisitor import NodeVisitor
-
-
+from .astprinter import printAst
+from .context import Context
 class Translator:
     """Python to lua main class translator"""
-    def __init__(self, config=None, show_ast=False):
+    def __init__(self, config=None, show_ast=False, locals=None):
         self.config = config if config is not None else Config()
+        self.context = Context(locals=locals)
         self.show_ast = show_ast
 
         self.output = []
@@ -18,10 +19,11 @@ class Translator:
         """Translate python code to lua code"""
         py_ast_tree = ast.parse(pycode)
 
-        visitor = NodeVisitor(config=self.config)
+        visitor = NodeVisitor(config=self.config,context=self.context)
 
         if self.show_ast:
-            print(ast.dump(py_ast_tree))
+            try: printAst(py_ast_tree)
+            except: ast.dump(py_ast_tree)
 
         visitor.visit(py_ast_tree)
 
