@@ -6,9 +6,9 @@ from setuptools import setup, find_packages
 setup(
     name="pythonlua",
     version="1.0",
-    url="https://github.com/NeonMercury/python-lua",
-    author="Eremin Dmitry",
-    author_email="mail@eremindmitry.ru",
+    url="https://github.com/Blimba/python-lua",
+    author="Eremin Dmitry, Bart Limburg",
+    author_email="mail@eremindmitry.ru, bartlimburg@gmail.com",
     licence="Apache",
     packages=find_packages(),
     long_description="",

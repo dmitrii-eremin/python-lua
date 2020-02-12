@@ -84,6 +84,7 @@ def make_test(filename):
         if output != expected:
             print("output: ", output)
             print("expected: ", expected)
+            print("for lua code: \n{}\n".format(lua_code))
 
         result = output == expected
     except RuntimeError:

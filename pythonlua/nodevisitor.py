@@ -83,14 +83,9 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_BoolOp(self, node):
         """Visit boolean operation"""
         operation = BooleanOperationDesc.OPERATION[node.op.__class__]
-        line = "({})".format(operation["format"])
-        values = {
-            "left": self.visit_all(node.values[0], True),
-            "right": self.visit_all(node.values[1], True),
-            "operation": operation["value"],
-        }
-
-        self.emit(line.format(**values))
+        # changed this for cases where multiple boolops are linked (e.g.: a and b and c)
+        line = "({})".format(operation.join([self.visit_all(v,True) for v in node.values]))
+        self.emit(line)
 
     def visit_Break(self, node):
         """Visit break"""
@@ -136,6 +131,10 @@ class NodeVisitor(ast.NodeVisitor):
                                   "__len__",
                                   "__gc__"]:  # the GC module does not work in python, but it does in lua!
                     mtmethods[nnode.name.rstrip("_")] = "\"{}\"".format(nnode.name)
+                if nnode.name == "__truediv__":  # different since python 3
+                    mtmethods["__div"] = "\"{}\"".format(nnode.name)
+                if nnode.name == "__str__":
+                    mtmethods["__tostring"] = "\"{}\"".format(nnode.name)
 
         mtmethods = ", ".join(["{} = {}".format(key,mtmethods[key]) for key in mtmethods])
         properties = ", ".join(["{} = {}".format(key,properties[key]) for key in properties])
@@ -165,7 +164,6 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit compare"""
 
         line = ""
-
         left = self.visit_all(node.left, inline=True)
         for i in range(len(node.ops)):
             operation = node.ops[i]
@@ -377,7 +375,6 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_If(self, node):
         """Visit if"""
         test = self.visit_all(node.test, inline=True)
-
         line = "if {} then".format(test)
 
         self.emit(line)
@@ -532,7 +529,7 @@ class NodeVisitor(ast.NodeVisitor):
         elif self.context.last()["docstring"]:
             self.emit('--[[ {} ]]'.format(node.s))
         else:
-            self.emit('String("{}")'.format(node.s))
+            self.emit('"{}"'.format(node.s))
 
     def visit_Subscript(self, node):
         """Visit subscript"""

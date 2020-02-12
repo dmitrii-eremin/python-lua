@@ -17,9 +17,9 @@ c = {
     ],
 }
 
-print(a[2])
-print(b[1][2])
+print(a[1])
+print(b[0][1])
 print(c["firstname"], c["lastname"])
 
-ch = c["children"][1]
+ch = c["children"][0]
 print(ch["name"], ch["age"])

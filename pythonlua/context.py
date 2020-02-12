@@ -5,17 +5,20 @@ from .tokenendmode import TokenEndMode
 
 class Context:
     """Class to store the python code context"""
-    def __init__(self, values=None):
+    def __init__(self, values=None, locals=None):
         values = values if values is not None else {
             "token_end_mode": TokenEndMode.LINE_FEED,
             "class_name": "",
             "locals": SymbolsStack(),
             "globals": SymbolsStack(),  # Not working yet
+            "methods": SymbolsStack(),
             "loop_label_name": "",
             "docstring": False,
         }
-
         self.ctx_stack = [values]
+        if locals:
+            for local in locals:
+                values["locals"].add_symbol(local)
 
     def last(self):
         """Return actual context state"""
@@ -26,6 +29,9 @@ class Context:
         value = self.ctx_stack[-1].copy()
         value.update(values)
         self.ctx_stack.append(value)
+
+    def top(self):
+        return False#len(self.ctx_stack) <= 1
 
     def pop(self):
         """Pop last context state"""
