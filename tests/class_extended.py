@@ -20,9 +20,24 @@ class example:
     def __str__(self):
         return str(self.value)
 
+    @property
+    def prop(self):
+        return self.value
+
+    @prop.setter
+    def prop(self,new):
+        if new > 5:
+            self.value = new
+
+
 a = example(5)
 b = example(6)
 print(a+b)
 print(a-b)
 print(a*b)
 print(a/b)
+print(a.prop)
+a.prop = 4
+print(a.prop)
+a.prop = 6
+print(a.prop)
