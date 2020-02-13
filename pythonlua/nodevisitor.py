@@ -129,7 +129,7 @@ class NodeVisitor(ast.NodeVisitor):
                                   "__mul__","__div__",
                                   "__mod__","__pow__",
                                   "__len__",
-                                  "__gc__"]:  # the GC module does not work in python, but it does in lua!
+                                  "__gc__","__type__"]:  # the GC module does not work in python, but it does in lua! Type method added for convenience
                     mtmethods[nnode.name.rstrip("_")] = "\"{}\"".format(nnode.name)
                 if nnode.name == "__truediv__":  # different since python 3
                     mtmethods["__div"] = "\"{}\"".format(nnode.name)

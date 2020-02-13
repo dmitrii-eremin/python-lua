@@ -2,6 +2,22 @@
     Begin the lua pythonization.
 --]]
 
+-- overwriting type so we can type dicts and lists etc.
+rawtype = type
+function type(obj)
+    local t = rawtype(obj)
+    if (t == 'table') then
+        local mt = getmetatable(obj)
+        if (mt ~= nil) then
+            if (mt.__type and rawtype(mt.__type) == "function") then
+                return getmetatable(obj).__type(obj)
+            end
+            return getmetatable(obj).__type or t
+        end
+    end
+    return t
+end
+
 local string_meta = getmetatable("")
 string_meta.__add = function(v1, v2)
     if type(v1) == "string" and type(v2) == "string" then
@@ -13,7 +29,7 @@ end
 local g_real_unpack = unpack or table.unpack
 
 unpack = function(t)
-    if type(t) == "table" and t._is_list then
+    if type(t) == "list" then
         return g_real_unpack(t._data)
     end
     return g_real_unpack(t)
@@ -48,10 +64,8 @@ function bool(x)
         return false
     end
 
-    if type(x) == "table" then
-        if x._is_list or x._is_dict then
-            return next(x._data) ~= nil
-        end
+    if type(x) == "list" or type(x) == "dict" then
+        return next(x._data) ~= nil
     end
 
     return true
@@ -110,7 +124,7 @@ function enumerate(t, start)
     start = start or 0
 
     local data = t
-    if t._is_list then
+    if type(t) == "list" then
         data = t._data
     end
 
@@ -131,8 +145,6 @@ list = {}
 setmetatable(list, {
     __call = function(_, t)
         local result = {}
-
-        result._is_list = true
 
         result._data = {}
         for _, v in ipairs(t) do
@@ -251,6 +263,7 @@ setmetatable(list, {
 
                 return v
             end,
+            __type = "list"
         })
 
         return result
@@ -261,8 +274,6 @@ dict = {}
 setmetatable(dict, {
     __call = function(_, t)
         local result = {}
-
-        result._is_dict = true
 
         result._data = {}
         for k, v in pairs(t) do
@@ -334,7 +345,7 @@ setmetatable(dict, {
         end
 
         methods.update = function(t)
-            assert(t._is_dict)
+            assert(type(t) == "dict")
 
             for k, v in t.items() do
                 result._data[k] = v
@@ -371,6 +382,7 @@ setmetatable(dict, {
 
                 return key_index            
             end,
+            __type = "dict"
         })
         
         return result
@@ -382,7 +394,7 @@ function staticmethod(old_fun)
 end
 
 function operator_in(item, items)
-    if type(items) == "table" then
+    if type(items) == "table" or type(items) == "list" or type(items) == "dict" then
         for v in items do
             if v == item then
                 return true
@@ -447,7 +459,6 @@ function class(class_init, bases, mtmethods, properties)
         if type(object.__init__) == "function" then
             object.__init__(...)
         end
-        
         return object
     end
     c.mtmethods = mtmethods
@@ -485,8 +496,11 @@ String = class(function(String)
     function String.concat(str1,str2)
         return String(str1._str .. str2._str)
     end
+    function String.type(self)
+        return "String"
+    end
     return String
-end, {}, {__tostring = "__str__", __add = "concat" }, {})
+end, {}, {__tostring = "__str__", __add = "concat", __type = "type" }, {})
 
 --[[
     End of the lua pythonization.
