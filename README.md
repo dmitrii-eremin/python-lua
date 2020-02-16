@@ -1,10 +1,14 @@
 # Python 3 to lua translator
 
-Python version: 3.5  
-Lua version: 5.2
+Python version: 3.7
+Lua version: 5.3
 
 **I want to know more about [FEATURES](#features)!**
 
+
+## Changes
+
+The latest version includes the use of 'operator overloading', and 'properties' in [classes](#classes)
 
 ## Usage
 
@@ -27,7 +31,7 @@ optional arguments:
 For example: ```python3 __main__py tests/iterlist.py```
 
 ### As a packet
-```
+```python
 from pythonlua.translator import Translator
 
 ...
@@ -175,7 +179,7 @@ print(a, b, c)
 You can start your string with the tag `[[luacode]]` to simply insert lua code in the python. For example,
 
 Python code:
-```
+```python
 def get_summ(a, b):
     return a + b
 
@@ -188,7 +192,7 @@ print(c)
 ```
 
 Lua code:
-```
+```lua
 local function get_summ(a, b)
     return (a + b)
 end
@@ -201,7 +205,7 @@ print(c)
 ### Simple math:  
 
 Python code:
-```
+```python
 print(5 + 3)
 print(18 - 2)
 print(5 * 5)
@@ -213,7 +217,7 @@ print(((5 + 34) ** 2 / 53) * (24 - 6 * 3))
 ```
 
 Lua code:
-```
+```lua
 print((5 + 3))
 print((18 - 2))
 print((5 * 5))
@@ -227,7 +231,7 @@ print((((math.pow((5 + 34), 2)) / 53) * (24 - (6 * 3))))
 ### Bitwise operations
 
 Python code:
-```
+```python
 a = 0xFA23423
 b = 0xAC23BD2
 c = 0x548034D
@@ -239,7 +243,7 @@ print(~((a & b) | c))
 ```
 
 Lua code:
-```
+```lua
 local a = 262288419
 local b = 180501458
 local c = 88605517
@@ -251,7 +255,7 @@ print(bit32.bnot((bit32.bor((bit32.band(a, b)), c))))
 ### Function definitions with variable arguments number and default arguments
 
 Python code:
-```
+```python
 def hello(name, age=20, nickname="", *args):
     print("Hello, my name is " + name + " and I'm " + str(age))
     print("My nickname is " + nickname)
@@ -263,7 +267,7 @@ hello("Jane")
 ```
 
 Lua code:
-```
+```lua
 local function hello(name, age, nickname, ...)
     age = age or 20
     nickname = nickname or ""
@@ -280,7 +284,7 @@ hello("Jane")
 ### Function decorators
 
 Python code:
-```
+```python
 def strong(old_fun):
     def wrapper(*args):
         s = "<strong>" + old_fun(*args) + "</strong>"
@@ -302,7 +306,7 @@ print(hello("John"))
 ```
 
 Lua code:
-```
+```lua
 local function strong(old_fun)
     local function wrapper(...)
         local args = list {...}
@@ -331,7 +335,7 @@ print(hello("John"))
 ### If/elif/else, for and while loops
 
 Python code:
-```
+```python
 a = 45
 b = 0
 
@@ -362,7 +366,7 @@ while i > 0:
 ```
 
 Lua code:
-```
+```lua
 local b = 0
 if ((a > 5) and (b < 34)) then
     print("a > 5")
@@ -395,7 +399,7 @@ end
 ### If expression
 
 Python code:
-```
+```python
 def factorial(value):
     return 1 if value == 0 else value * factorial(value - 1)
 
@@ -407,7 +411,7 @@ print(factorial(0))
 ```
 
 Lua code:
-```
+```lua
 local function factorial(value)
     return (value == 0) and 1 or (value * factorial((value - 1)))
 end
@@ -420,7 +424,7 @@ print(factorial(0))
 ### Lists and dictionaries
 
 Python code:
-```
+```python
 a = [1, 2, 5]
 b = [
     [1, 2, 3],
@@ -449,7 +453,7 @@ print(ch["name"], ch["age"])
 ```
 
 Lua code:
-```
+```lua
 local a = list {1, 2, 5}
 local b = list {list {1, 2, 3}, list {4, 5, 6}, list {7, 8, 9}}
 local c = dict {["firstname"] = "John", ["lastname"] = "Doe", ["age"] = 42, ["children"] = list {dict {["name"] = "Sara", ["age"] = 4}}}
@@ -463,13 +467,13 @@ print(ch["name"], ch["age"])
 ### Python import statement
 
 Python code:
-```
+```python
 import foo.bar
 import bar as bar_ex
 ```
 
 Lua code:
-```
+```lua
 local bar = require "foo.bar"
 local bar_ex = require "bar"
 ```
@@ -477,14 +481,14 @@ local bar_ex = require "bar"
 ### Lambda functions
 
 Python code:
-```
+```python
 sqr = lambda x: x * x
 print(sqr(2))
 print(sqr(8))
 ```
 
 Lua code:
-```
+```lua
 local sqr = function(x) return (x * x) end
 print(sqr(2))
 print(sqr(8))
@@ -493,7 +497,7 @@ print(sqr(8))
 ### Python del operator
 
 Python code:
-```
+```python
 a, b, c = 1, 2, 3
 print(a, b, c)
 del a, b
@@ -503,7 +507,7 @@ print(a, b, c)
 ```
 
 Lua code:
-```
+```lua
 local a, b, c = 1, 2, 3
 print(a, b, c)
 a, b = nil, nil
@@ -515,7 +519,7 @@ print(a, b, c)
 ### Python list and dictionary comprehensions
 
 Python code:
-```
+```python
 a = [i * j for i in range(5) for j in range(3) if i * j % 2 == 0 and i > 0 and j > 0]
 
 for item in a:
@@ -528,7 +532,7 @@ for k, v in b.items():
 ```
 
 Lua code:
-```
+```lua
 local a = (function() local result = list {} for i in range(5) do for j in range(3) do if (((math.fmod((i * j), 2)) == 0) and (i > 0)) then result.append((i * j)) end end end return result end)()
 for item in a do
     print(item)
@@ -544,7 +548,7 @@ end
 ### Classes
 
 Python code:
-```
+```python
 class Animal:
     PLANET = "Earth"
 
@@ -583,7 +587,7 @@ print("sparky.PLANET = ", sparky.PLANET)
 ```
 
 Lua code:
-```
+```lua
 local Animal = class(function(Animal)
     Animal.PLANET = "Earth"
     function Animal.__init__(self, name)
@@ -617,10 +621,72 @@ print("Animal.PLANET = ", Animal.PLANET)
 print("sparky.PLANET = ", sparky.PLANET)
 ```
 
+Operator overloading & Properties:
+
+```python
+class A:
+    def __init__(self,value):
+        self.v = value
+    def __add__(self,other):
+        return A(self.v+other.v)
+    @property
+    def v(self):
+        return self._v
+    @v.setter
+    def v(self,value):
+        if (value > 0):
+            self._v = value
+    def __str__(self):
+        return str(self.v)    
+a = A(3)
+b = A(4)
+c = a+b
+print(c)
+c.v = 4  # sets the value
+print(c)
+c.v = -1  # doesn't set the value because v <= 0.
+print(c)
+```
+Lua code:
+```lua
+local A = class(function(A)
+    function A.__init__(self, value)
+        self.v = value
+    end
+    function A.__add__(self, other)
+        return A((self.v + other.v))
+    end
+    A.v = property(function(self)
+        return self._v
+    end)
+    A.v = A.v.setter(function(self, value)
+        if (value > 0) then
+            self._v = value
+        end
+    end)
+    function A.__str__(self)
+        return str(self.v)
+    end
+    return A
+end, {}, {__add = "__add__", __tostring = "__str__"}, {v = "A.v"})
+local a = A(3)
+local b = A(4)
+local c = (a + b)
+print(c)
+c.v = 4
+print(c)
+c.v = -1
+print(c)
+```
+Output:
+7
+4
+4
+
 ### Loops continue statement
 
 Python code:
-```
+```python
 for i in range(10):
     if i == 5:
         continue
@@ -631,7 +697,7 @@ for i in range(10):
 ```
 
 Lua code:
-```
+```lua
 for i in range(10) do
     if (i == 5) then
         goto loop_label_1
@@ -650,7 +716,7 @@ end
 ### Operators `in` and `not in`
 
 Python code:
-```
+```python
 a = [1, 2, 3, 4]
 b = {
     "name": "John",
@@ -674,7 +740,7 @@ print("Hells" not in c)
 ```
 
 Lua code:
-```
+```lua
 local a = list {1, 2, 3, 4}
 local b = dict {["name"] = "John", ["age"] = 42}
 local c = "Hello, world!"
