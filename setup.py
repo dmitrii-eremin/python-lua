@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pythonlua",
-    version="1.1.0",
+    version="1.2.0",
     url="https://github.com/Blimba/python-lua",
     author="Eremin Dmitry, Bart Limburg",
     author_email="mail@eremindmitry.ru, bartlimburg@gmail.com",

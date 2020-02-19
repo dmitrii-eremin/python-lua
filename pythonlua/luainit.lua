@@ -1,6 +1,8 @@
 --[[
     Begin the lua pythonization.
 --]]
+-- for type comparisons
+float = "number"
 
 -- overwriting type so we can type dicts and lists etc.
 rawtype = type
@@ -8,14 +10,30 @@ function type(obj)
     local t = rawtype(obj)
     if (t == 'table') then
         local mt = getmetatable(obj)
-        if (mt ~= nil) then
+        if (mt ~= nil) then            
             if (mt.__type and rawtype(mt.__type) == "function") then
                 return getmetatable(obj).__type(obj)
+            elseif (mt.__type and rawtype(mt.__type) == "table") then
+                return getmetatable(obj).__type
             end
             return getmetatable(obj).__type or t
         end
     end
     return t
+end
+
+function isinstance(obj,typ)
+    if (typ == int) then
+        typ = "number"
+    elseif (typ == str) then
+        typ = "string"
+    end
+    if rawtype(typ) == "table" then
+        -- here we should also check for types of _bases
+        ret = getmetatable(typ).__type or "table"
+        return type(obj) == ret
+    end
+    return type(obj) == typ
 end
 
 local string_meta = getmetatable("")
@@ -29,7 +47,7 @@ end
 local g_real_unpack = unpack or table.unpack
 
 unpack = function(t)
-    if type(t) == "list" then
+    if type(t) == list then
         return g_real_unpack(t._data)
     end
     return g_real_unpack(t)
@@ -64,7 +82,7 @@ function bool(x)
         return false
     end
 
-    if type(x) == "list" or type(x) == "dict" then
+    if type(x) == list or type(x) == dict then
         return next(x._data) ~= nil
     end
 
@@ -124,7 +142,7 @@ function enumerate(t, start)
     start = start or 0
 
     local data = t
-    if type(t) == "list" then
+    if type(t) == list then
         data = t._data
     end
 
@@ -263,11 +281,15 @@ setmetatable(list, {
 
                 return v
             end,
-            __type = "list"
+            __type = list
         })
 
         return result
     end,
+    __type = list,
+    __tostring = function(self)
+        return "list"
+    end
 })
 
 dict = {}
@@ -345,7 +367,7 @@ setmetatable(dict, {
         end
 
         methods.update = function(t)
-            assert(type(t) == "dict")
+            assert(type(t) == dict)
 
             for k, v in t.items() do
                 result._data[k] = v
@@ -382,11 +404,15 @@ setmetatable(dict, {
 
                 return key_index            
             end,
-            __type = "dict"
+            __type = dict
         })
         
         return result
     end,
+    __type = dict,
+    __tostring = function(self)
+        return "dict"
+    end
 })
 
 function staticmethod(old_fun)
@@ -394,7 +420,7 @@ function staticmethod(old_fun)
 end
 
 function operator_in(item, items)
-    if type(items) == "table" or type(items) == "list" or type(items) == "dict" then
+    if type(items) == "table" or type(items) == list or type(items) == dict then
         for v in items do
             if v == item then
                 return true
@@ -408,7 +434,7 @@ function operator_in(item, items)
 end
 
 -- Lua classes
-function class(class_init, bases, mtmethods, properties)
+function class(class_init, name, bases, mtmethods, properties)
     bases = bases or {}
 
     local c = {}
@@ -424,12 +450,12 @@ function class(class_init, bases, mtmethods, properties)
     c = class_init(c)
     
     c.properties = properties
-
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
 
         nmt = {}
+        nmt.__type = c
         for k,v in pairs(c.mtmethods) do
             nmt[k] = c[v]
         end
@@ -462,7 +488,10 @@ function class(class_init, bases, mtmethods, properties)
         return object
     end
     c.mtmethods = mtmethods
-
+    mt.__type = c
+    mt.__tostring = function() 
+        return name
+    end
     setmetatable(c, mt)
     
     return c
@@ -483,7 +512,7 @@ property = class(function(property)
         return self
     end
     return property
-end, {}, {}, {})
+end, "property", {}, {}, {})
 
 -- strings in python have methods, so we need to classify strings in lua
 String = class(function(String)

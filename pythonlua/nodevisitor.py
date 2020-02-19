@@ -129,7 +129,7 @@ class NodeVisitor(ast.NodeVisitor):
                                   "__mul__","__div__",
                                   "__mod__","__pow__",
                                   "__len__",
-                                  "__gc__","__type__"]:  # the GC module does not work in python, but it does in lua! Type method added for convenience
+                                  "__gc__"]:  # the GC module does not work in python, but it does in lua!
                     mtmethods[nnode.name.rstrip("_")] = "\"{}\"".format(nnode.name)
                 if nnode.name == "__truediv__":  # different since python 3
                     mtmethods["__div"] = "\"{}\"".format(nnode.name)
@@ -153,7 +153,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.output[-1].append("return {node_name}".format(**values))
 
-        self.emit("end, {{{}}}, {{{}}}, {{{}}})".format(", ".join(bases),mtmethods,properties))
+        self.emit("end, \"{}\", {{{}}}, {{{}}}, {{{}}})".format(node.name, ", ".join(bases),mtmethods,properties))
 
         # Return class object only in the top-level classes.
         # Not in the nested classes.
@@ -167,6 +167,7 @@ class NodeVisitor(ast.NodeVisitor):
         left = self.visit_all(node.left, inline=True)
         for i in range(len(node.ops)):
             operation = node.ops[i]
+
             operation = CompareOperationDesc.OPERATION[operation.__class__]
 
             right = self.visit_all(node.comparators[i], inline=True)

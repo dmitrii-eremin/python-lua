@@ -18,4 +18,7 @@ class CompareOperationDesc:
         ast.NotIn: {
             "format": "not operator_in({left}, {right})",
         },
+        ast.Is: {
+            "format": "{left} == {right}"
+        }
     }
