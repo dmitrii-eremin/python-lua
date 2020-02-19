@@ -515,21 +515,21 @@ property = class(function(property)
 end, "property", {}, {}, {})
 
 -- strings in python have methods, so we need to classify strings in lua
-String = class(function(String)
-    function String.__init__(self,str)
-        self._str = str
-    end
-    function String.__str__(self)
-        return self._str
-    end
-    function String.concat(str1,str2)
-        return String(str1._str .. str2._str)
-    end
-    function String.type(self)
-        return "String"
-    end
-    return String
-end, {}, {__tostring = "__str__", __add = "concat", __type = "type" }, {})
+-- String = class(function(String)
+--     function String.__init__(self,str)
+--         self._str = str
+--     end
+--     function String.__str__(self)
+--         return self._str
+--     end
+--     function String.concat(str1,str2)
+--         return String(str1._str .. str2._str)
+--     end
+--     function String.type(self)
+--         return "String"
+--     end
+--     return String
+-- end, {}, {__tostring = "__str__", __add = "concat", __type = "type" }, {})
 
 --[[
     End of the lua pythonization.
