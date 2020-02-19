@@ -8,7 +8,8 @@ Lua version: 5.3
 
 ## Changes
 
-The latest version includes the use of 'operator overloading', and 'properties' in [classes](#classes)
+- The latest version includes the use of 'operator overloading', and 'properties' in [classes](#classes)
+- [Type comparisons](#type) have been added
 
 ## Usage
 
@@ -757,3 +758,67 @@ print((operator_in("world", c)))
 print((operator_in("Foo", c)))
 print((not operator_in("Hells", c)))
 ```
+
+
+### Type
+
+Python code:
+```python
+class A:
+    pass
+a = A()
+if isinstance(a,A) and type(a) is A:
+    print("class typing works")   
+b = 5.5
+if isinstance(b,float):  # or int, since both convert to number in lua
+    print("number typing works")
+c = "my string"
+if isinstance(c,str):
+    print("string typing works")
+d = []
+if type(d) is list and isinstance(d,list):
+    print("list type works")
+e = {}
+if type(e) is dict and isinstance(e,dict):
+    print("dict type works")
+if type(d) is dict or type(e) is list:
+    print("not good")
+    
+```
+
+Lua code:
+```lua
+local A = class(function(A)
+    return A
+end, "A", {}, {}, {})
+local a = A()
+if (isinstance(a, A) and (type(a) == A)) then
+    print("class typing works")
+end
+local b = 5.5
+if isinstance(b, float) then
+    print("number typing works")
+end
+local c = "my string"
+if isinstance(c, str) then
+    print("string typing works")
+end
+local d = list {}
+if ((type(d) == list) and isinstance(d, list)) then
+    print("list type works")
+end
+local e = dict {}
+if ((type(e) == dict) and isinstance(e, dict)) then
+    print("dict type works")
+end
+if ((type(d) == dict) or (type(e) == list)) then
+    print("not good")
+end
+```
+
+Output:
+class typing works
+number typing works
+string typing works
+list type works
+dict type works
