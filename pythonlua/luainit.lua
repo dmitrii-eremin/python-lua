@@ -438,7 +438,7 @@ function class(class_init, name, bases, mtmethods, properties)
     bases = bases or {}
 
     local c = {}
-    
+    c.properties = {}
     for _, base in ipairs(bases) do
         for k, v in pairs(base) do
             c[k] = v
@@ -449,7 +449,10 @@ function class(class_init, name, bases, mtmethods, properties)
     
     c = class_init(c)
     
-    c.properties = properties
+    for k,v in pairs(properties) do
+        c.properties[k] = v
+    end
+    
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
@@ -490,7 +493,7 @@ function class(class_init, name, bases, mtmethods, properties)
     c.mtmethods = mtmethods
     mt.__type = c
     mt.__tostring = function() 
-        return name
+        return name   -- perhaps it is better if the type table is not the main object, but instead a separate table? the __tostring of the main object might be confusing.
     end
     setmetatable(c, mt)
     

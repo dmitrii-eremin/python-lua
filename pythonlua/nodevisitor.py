@@ -542,6 +542,15 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(line.format(**values))
 
+    def visit_Try(self,node):
+        """Visit try"""
+        self.emit("local ret, err = xpcall(function()")
+        self.visit_all(node.body)
+        self.emit('end, function(Error)')
+        for handler in node.handlers:
+            self.visit_all(handler.body)
+        self.emit('end)')
+
     def visit_Tuple(self, node):
         """Visit tuple"""
         elements = [self.visit_all(item, inline=True) for item in node.elts]

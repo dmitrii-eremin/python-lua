@@ -762,6 +762,9 @@ print((not operator_in("Hells", c)))
 
 ### Type
 
+Currently type comparisons are done using isinstance. Comparisons such as ```if type(var) is int:``` cannot be done
+on basic types. They do work on lists, dicts and classes.
+
 Python code:
 ```python
 class A:
@@ -817,8 +820,37 @@ end
 ```
 
 Output:
-class typing works
-number typing works
-string typing works
-list type works
-dict type works
+class typing works  
+number typing works  
+string typing works  
+list type works  
+dict type works  
+
+### Try/Except block
+
+Python code:
+```python
+try:
+    print('test')
+    xpcall()
+    print('still going')
+except:
+    print('Error in function')
+print('running')
+```
+Lua code
+```lua
+local ret, err = xpcall(function()
+    print("test")
+    xpcall()
+    print("still going")
+end, function(Error)
+    print("Error in function")
+end)
+print("running")
+```
+Output:
+
+test  
+Error in function  
+running  
