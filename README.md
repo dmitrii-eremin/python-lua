@@ -10,6 +10,7 @@ Lua version: 5.3
 
 - The latest version includes the use of 'operator overloading', and 'properties' in [classes](#classes)
 - [Type comparisons](#type) have been added
+- [Try/except blocks](#tryexcept-block) have been added
 
 ## Usage
 
