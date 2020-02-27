@@ -319,6 +319,9 @@ class NodeVisitor(ast.NodeVisitor):
         self.emit(function_def)
 
         self.context.push({"class_name": ""})
+        # append function arguments as local vars
+        for arg in node.args.args:
+            self.context.last()["locals"].add_symbol(arg.arg)
         self.visit_all(node.body)
         self.context.pop()
 
