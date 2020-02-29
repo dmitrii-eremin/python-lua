@@ -479,12 +479,16 @@ function class(class_init, name, bases, mtmethods, properties)
         nmt.__newindex = function(tbl, idx, new)
             local method = c[idx]
             if (c.properties[idx]) then
-                return method.sfunc(object,new)
+                method.sfunc(object,new)
+            elseif type(new) == "function" then
+                rawset(tbl,idx,function(...)
+                    return new(tbl,...)
+                end)
+            else
+                rawset(tbl,idx,new)
             end
-            rawset(tbl,idx,new)
         end
         setmetatable(object, nmt)
-
         if type(object.__init__) == "function" then
             object.__init__(...)
         end
@@ -503,15 +507,15 @@ end
 -- on the main class for __index and __newindex referral.
 property = class(function(property)
     function property.__init__(self,gfunc,sfunc)
-        self.gfunc = gfunc
-        self.sfunc = sfunc
+        rawset(self,"gfunc",gfunc)
+        rawset(self,"sfunc",sfunc)
     end
     function property.getter(self,gfunc)
-        self.gfunc = gfunc
+        rawset(self,"gfunc",gfunc)
         return self
     end
     function property.setter(self,sfunc)
-        self.sfunc = sfunc
+        rawset(self,"sfunc",sfunc)
         return self
     end
     return property
