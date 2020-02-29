@@ -420,7 +420,7 @@ function staticmethod(old_fun)
 end
 
 function operator_in(item, items)
-    if type(items) == "table" or type(items) == list or type(items) == dict then
+    if type(items) == list or type(items) == dict then
         for v in items do
             if v == item then
                 return true
@@ -428,8 +428,11 @@ function operator_in(item, items)
         end
     elseif type(items) == "string" and type(item) == "string" then
         return string.find(items, item, 1, true) ~= nil
+    elseif rawtype(items) == "table" then
+        if callable(getmetatable(items).__in) then
+            return getmetatable(items).__in(items,item)
+        end
     end
-
     return false
 end
 

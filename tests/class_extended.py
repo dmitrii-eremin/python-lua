@@ -20,6 +20,12 @@ class example:
     def __str__(self):
         return str(self.value)
 
+
+    def __contains__(self, item):
+        if isinstance(item, str):
+            return True
+        return False
+
     @property
     def prop(self):
         return self.value
@@ -41,3 +47,8 @@ a.prop = 4
 print(a.prop)
 a.prop = 6
 print(a.prop)
+
+if "string" in a:
+    print("yes")
+if 1 in a:
+    print("no")

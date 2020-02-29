@@ -135,6 +135,8 @@ class NodeVisitor(ast.NodeVisitor):
                     mtmethods["__div"] = "\"{}\"".format(nnode.name)
                 if nnode.name == "__str__":
                     mtmethods["__tostring"] = "\"{}\"".format(nnode.name)
+                if nnode.name == "__contains__":
+                    mtmethods["__in"] = "\"{}\"".format(nnode.name)
 
         mtmethods = ", ".join(["{} = {}".format(key,mtmethods[key]) for key in mtmethods])
         properties = ", ".join(["{} = {}".format(key,properties[key]) for key in properties])
