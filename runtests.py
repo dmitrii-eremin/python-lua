@@ -13,7 +13,7 @@ from pythonlua.translator import Translator
 
 
 TESTS_FOLDER = "tests"
-LUA_PATH = "lua"
+LUA_PATH = "lua53"
 
 EXPECTED_FORMAT = "{}.expected"
 
@@ -49,11 +49,28 @@ def make_test(filename):
         return False
 
     result = None
+    readme = '''
+### {}
+<details><summary>Open</summary>
+<p>
+Python code:
 
+```python
+{}
+```
+</p>
+'''.format(filename[6:-3].title(),content)
     try:
         translator = Translator()
         lua_code = translator.translate(content)
+        readme += '''<p>
+Lua code:
 
+```lua
+{}
+```
+</p>
+'''.format(lua_code)
         file_desc, filename = mkstemp()
 
         tmp_file = os.fdopen(file_desc, "w")
@@ -73,9 +90,20 @@ def make_test(filename):
                 break
             else:
                 output.append(line.decode("utf-8"))
-
+        # while True:
+        #     line = proc.stderr.readline()
+        #     if line == b"":
+        #         break
+        #     else:
+        #         output.append(line.decode("utf-8"))
         output = "".join(output)
+        readme += '''<p>
+Output:
 
+{}
+</p>
+</details>
+'''.format(output.replace('\n','\n'))
         os.remove(filename)
 
         output = [item.strip() for item in output.split("\n")]
@@ -86,10 +114,12 @@ def make_test(filename):
             print("expected: ", expected)
             print("for lua code: \n{}\n".format(lua_code))
 
+
         result = output == expected
     except RuntimeError:
         result = False
-
+    with open('readme.txt','a') as f:
+        f.write(readme)
     print(Fore.GREEN + "PASSED" if result else Fore.RED + "FAILED")
     print(Style.RESET_ALL, end="")
     return result
@@ -102,7 +132,8 @@ def main():
     tests = get_all_tests(TESTS_FOLDER)
 
     passed = 0
-
+    with open('readme.txt','w') as f:
+        f.write('')
     for test in tests:
         if make_test(test):
             passed += 1

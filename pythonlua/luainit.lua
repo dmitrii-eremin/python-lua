@@ -466,34 +466,23 @@ function class(class_init, name, bases, mtmethods, properties)
             nmt[k] = c[v]
         end
         nmt.__index = function(tbl, idx)
-            local method = c[idx]
-
-            if type(method) == "function" then
-                return function(...)
-                    return c[idx](object, ...)
-                end
-            end
-
+            local attr = c[idx]
             if (c.properties[idx]) then
-                return method.gfunc(object)
+                return attr.gfunc(tbl)
             end
-            return method
+            return attr
         end
         nmt.__newindex = function(tbl, idx, new)
-            local method = c[idx]
+            local attr = c[idx]
             if (c.properties[idx]) then
-                method.sfunc(object,new)
-            elseif type(new) == "function" then
-                rawset(tbl,idx,function(...)
-                    return new(tbl,...)
-                end)
+                attr.sfunc(tbl,new)
             else
                 rawset(tbl,idx,new)
             end
         end
         setmetatable(object, nmt)
         if type(object.__init__) == "function" then
-            object.__init__(...)
+            object:__init__(...)
         end
         return object
     end
@@ -523,23 +512,6 @@ property = class(function(property)
     end
     return property
 end, "property", {}, {}, {})
-
--- strings in python have methods, so we need to classify strings in lua
--- String = class(function(String)
---     function String.__init__(self,str)
---         self._str = str
---     end
---     function String.__str__(self)
---         return self._str
---     end
---     function String.concat(str1,str2)
---         return String(str1._str .. str2._str)
---     end
---     function String.type(self)
---         return "String"
---     end
---     return String
--- end, {}, {__tostring = "__str__", __add = "concat", __type = "type" }, {})
 
 --[[
     End of the lua pythonization.
