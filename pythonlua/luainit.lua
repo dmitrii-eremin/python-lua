@@ -291,10 +291,12 @@ setmetatable(list, {
                     return rawget(result._data, index + 1)
                 end
 
-                return methods[index]
+                return staticmethod(methods[index])
             end,
             __newindex = function(self, index, value)
-                result._data[index] = value
+                table.remove(result._data, index+1)
+                table.insert(result._data, index+1, value)
+                -- result._data[index] = value
             end,
             __call = function(self, _, idx)
                 if idx == nil and iterator_index ~= nil then
@@ -415,7 +417,7 @@ setmetatable(dict, {
                 if result._data[index] ~= nil then
                     return result._data[index]
                 end
-                return methods[index]
+                return staticmethod(methods[index])
             end,
             __newindex = function(self, index, value)
                 result._data[index] = value

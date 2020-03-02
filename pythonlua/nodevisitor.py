@@ -25,6 +25,9 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit assign"""
         target = self.visit_all(node.targets[0], inline=True)
         value = self.visit_all(node.value, inline=True)
+        target_name = target
+        if "[" in target_name:
+            target_name = target_name[:target_name.index("[")]
 
         local_keyword = ""
 
@@ -33,7 +36,7 @@ class NodeVisitor(ast.NodeVisitor):
         if last_ctx["class_name"]:
             target = ".".join([last_ctx["class_name"], target])
 
-        if not self.context.top() and "." not in target and not last_ctx["locals"].exists(target):
+        if not self.context.top() and "." not in target and not last_ctx["locals"].exists(target_name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(target)
 
@@ -487,7 +490,7 @@ class NodeVisitor(ast.NodeVisitor):
                 self.emit(line)
                 ends_count += 1
 
-        line = "result.append({})"
+        line = "result:append({})"
         line = line.format(self.visit_all(node.elt, inline=True))
         self.emit(line)
 
