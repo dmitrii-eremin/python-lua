@@ -61,11 +61,7 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node):
         """Visit attribute"""
-        last_ctx = self.context.last()
-        if "method_name" in last_ctx and last_ctx['method_name']:
-            line = "{object}:{attr}"
-        else:
-            line = "{object}.{attr}"
+        line = "{object}.{attr}"
         values = {
             "object": self.visit_all(node.value, True),
             "attr": node.attr,
@@ -99,9 +95,8 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit function call"""
         line = "{name}({arguments})"
         if 'attr' in node.func.__dict__:
-            self.context.push({"method_name": node.func.attr})
             name = self.visit_all(node.func, inline=True)
-            self.context.pop()
+            name = ":".join(name.rsplit(".",1))
         else:
             name = self.visit_all(node.func, inline=True)
         arguments = [self.visit_all(arg, inline=True) for arg in node.args]
@@ -291,7 +286,8 @@ class NodeVisitor(ast.NodeVisitor):
             decorator_name = self.visit_all(decorator, inline=True)
             # make sure that it uses methods instead of global functions when they are available
             if last_ctx["methods"].exists(decorator_name.split(".")[0]) and last_ctx["class_name"]:
-                decorator_name = decorator_name.replace(".",":")
+                print("decorator")
+                decorator_name = ":".join(decorator_name.rsplit(".",1))
                 decorator_name = ".".join([last_ctx["class_name"],decorator_name])
             # add the decorator to the function definition.
             line = '{}({}'.format(decorator_name,line)
