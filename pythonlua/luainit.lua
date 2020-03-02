@@ -291,12 +291,11 @@ setmetatable(list, {
                     return rawget(result._data, index + 1)
                 end
 
-                return staticmethod(methods[index])
+                return _stripself(methods[index])
             end,
             __newindex = function(self, index, value)
                 table.remove(result._data, index+1)
                 table.insert(result._data, index+1, value)
-                -- result._data[index] = value
             end,
             __call = function(self, _, idx)
                 if idx == nil and iterator_index ~= nil then
@@ -417,7 +416,7 @@ setmetatable(dict, {
                 if result._data[index] ~= nil then
                     return result._data[index]
                 end
-                return staticmethod(methods[index])
+                return _stripself(methods[index])
             end,
             __newindex = function(self, index, value)
                 result._data[index] = value
@@ -443,8 +442,14 @@ setmetatable(dict, {
 })
 
 function staticmethod(old_fun)
+    return function(...)
+        return old_fun(...)
+    end
+end
+
+function _stripself(old_fun)
     return function(self,...)
-        old_fun(...)
+        return old_fun(...)
     end
 end
 
@@ -471,15 +476,17 @@ function class(class_init, name, bases, mtmethods, properties)
 
     local c = {}
     c.properties = {}
+    c.attrs = {}
     for _, base in ipairs(bases) do
-        for k, v in pairs(base) do
-            c[k] = v
+        for k, v in pairs(base.attrs) do
+            c.attrs[k] = v
+        end
+        for k, v in pairs(base.properties) do
+            c.properties[k] = v
         end
     end
-
     c._bases = bases
-    
-    c = class_init(c)
+    c.attrs = class_init(c.attrs)
     
     for k,v in pairs(properties) do
         c.properties[k] = v
@@ -487,21 +494,20 @@ function class(class_init, name, bases, mtmethods, properties)
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
-
         nmt = {}
         nmt.__type = c
         for k,v in pairs(c.mtmethods) do
-            nmt[k] = c[v]
+            nmt[k] = c.attrs[v]
         end
         nmt.__index = function(tbl, idx)
-            local attr = c[idx]
+            local attr = c.attrs[idx]
             if (c.properties[idx]) then
                 return attr.gfunc(tbl)
             end
             return attr
         end
         nmt.__newindex = function(tbl, idx, new)
-            local attr = c[idx]
+            local attr = c.attrs[idx]
             if (c.properties[idx]) then
                 attr.sfunc(tbl,new)
             else
@@ -516,11 +522,34 @@ function class(class_init, name, bases, mtmethods, properties)
     end
     c.mtmethods = mtmethods
     mt.__type = c
-    mt.__tostring = function() 
+    mt.__index = function(self,key)
+        if callable(c.attrs[key]) then
+            return _stripself(c.attrs[key])
+        else
+            return c.attrs[key]
+        end
+    end
+    mt.__newindex = function(self,key,value)
+        c.attrs[key] = value
+    end
+    mt.__tostring = function(self) 
         return name   -- perhaps it is better if the type table is not the main object, but instead a separate table? the __tostring of the main object might be confusing.
     end
     setmetatable(c, mt)
-    
+    cmt = {}
+    cmt.__call = function(...)
+        return mt.__call(...)
+    end
+    -- cmt.__index = function(self,key)
+    --     rg = rawget(self,key)
+    --     if rawtype(rg) == "function" then
+    --         return _stripself(rg)
+    --     else
+    --         return rg
+    --     end
+    -- end
+    setmetatable(c.attrs,cmt)
+
     return c
 end
 -- properties implemented by class object / decorator. Requires as well a properties list
@@ -554,6 +583,29 @@ Slice = class(function(Slice)
     end
     return Slice
 end, "Slice", {}, {}, {})
+
+-- supercount = 0
+-- function super(base,instance)
+--     obj = {}
+--     mt = {}
+--     function mt.__index(self,key)
+--         print(key)
+--         if callable(base[key]) then
+--             return base[key]
+--         else
+--             return instance[key]
+--         end
+--     end
+--     function mt.__newindex(self,key,value)
+--         instance[key] = value
+--     end
+--     function mt.__get(self)
+--         print("getting")
+--         return instance
+--     end
+--     setmetatable(obj,mt)    
+--     return obj
+-- end
 
 --[[
     End of the lua pythonization.

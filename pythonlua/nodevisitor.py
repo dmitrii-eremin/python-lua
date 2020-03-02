@@ -99,7 +99,11 @@ class NodeVisitor(ast.NodeVisitor):
         line = "{name}({arguments})"
         if 'attr' in node.func.__dict__:
             name = self.visit_all(node.func, inline=True)
-            name = ":".join(name.rsplit(".",1))
+            spl = name.rsplit(".",1)
+            last_ctx = self.context.last()
+            if not "static_identifier" in last_ctx: last_ctx["static_identifier"] = ""
+            if spl[0] not in ["math","os","coroutine","table","string",self.context.last()['static_identifier']]:
+                name = ":".join(spl)
         else:
             name = self.visit_all(node.func, inline=True)
         arguments = [self.visit_all(arg, inline=True) for arg in node.args]
@@ -153,7 +157,6 @@ class NodeVisitor(ast.NodeVisitor):
         }
 
         self.emit("{local}{name} = class(function({node_name})".format(**values))
-
         self.context.push({"class_name": node.name})
         self.visit_all(node.body)
         self.context.pop()
@@ -326,7 +329,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit(function_def)
 
-        self.context.push({"class_name": ""})
+        self.context.push({"class_name": "", "static_identifier": last_ctx['class_name']})
         # append function arguments as local vars
         for arg in node.args.args:
             self.context.last()["locals"].add_symbol(arg.arg)
