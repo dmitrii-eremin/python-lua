@@ -528,6 +528,15 @@ class NodeVisitor(ast.NodeVisitor):
         line += self.visit_all(node.value, inline=True)
         self.emit(line)
 
+
+    def visit_Slice(self,node):
+        values = {
+            'lower': self.visit_all(node.lower,inline=True) if node.lower else "nil",
+            'upper': self.visit_all(node.upper,inline=True) if node.upper else "nil",
+            'step': self.visit_all(node.step,inline=True)  if node.step else "nil"
+        }
+        self.emit("Slice({lower},{upper},{step})".format(**values))
+
     def visit_Starred(self, node):
         """Visit starred object"""
         value = self.visit_all(node.value, inline=True)
@@ -543,7 +552,7 @@ class NodeVisitor(ast.NodeVisitor):
         elif self.context.last()["docstring"]:
             self.emit('--[[ {} ]]'.format(node.s))
         else:
-            self.emit('"{}"'.format(node.s))
+            self.emit('("{}")'.format(node.s))
 
     def visit_Subscript(self, node):
         """Visit subscript"""

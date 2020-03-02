@@ -43,6 +43,31 @@ string_meta.__add = function(v1, v2)
     end
     return v1 + v2
 end
+string_meta.__index = function(str,key)
+    if type(key) == Slice then
+        return key:process(str)
+    end
+    return string[key]
+end
+function string.replace(str,old,new,count)
+    str, _ = string.gsub(str,old,new,count)
+    return str
+end
+oldfind = string.find
+function string.find(str,search,from)
+    index, _ = oldfind(str,search,from)-1
+    return index
+end
+string.index = string.find
+oldformat = string.format
+function string.format(str,...)
+    for _,j in ipairs({...}) do
+        str = str:gsub("{.-}",j,1)
+    end
+    return str
+end
+
+
 
 local g_real_unpack = unpack or table.unpack
 
@@ -427,7 +452,7 @@ function operator_in(item, items)
             end
         end
     elseif type(items) == "string" and type(item) == "string" then
-        return string.find(items, item, 1, true) ~= nil
+        return oldfind(items, item, 1, true) ~= nil
     elseif rawtype(items) == "table" then
         if callable(getmetatable(items).__in) then
             return getmetatable(items).__in(items,item)
@@ -455,7 +480,6 @@ function class(class_init, name, bases, mtmethods, properties)
     for k,v in pairs(properties) do
         c.properties[k] = v
     end
-    
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
@@ -512,6 +536,20 @@ property = class(function(property)
     end
     return property
 end, "property", {}, {}, {})
+
+Slice = class(function(Slice)
+    function Slice.__init__(self,lower,upper,step)
+        self.lower = lower+1
+        self.upper = upper
+        self.step = step
+    end
+    function Slice.process(self,obj)
+        if type(obj) == "string" then
+            return obj:sub(self.lower,self.upper)
+        end
+    end
+    return Slice
+end, "Slice", {}, {}, {})
 
 --[[
     End of the lua pythonization.
