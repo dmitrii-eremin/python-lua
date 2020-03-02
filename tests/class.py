@@ -7,6 +7,10 @@ class Animal:
     def say_hello(self):
         print("Hello, my name is: " + self.name + "!")
 
+    @staticmethod
+    def statichello(msg):
+        print(msg+" from staticmethod")
+
 
 class Dog(Animal):
     def say_hello(self):
@@ -33,3 +37,6 @@ Animal.PLANET = "Mars"
 
 print("Animal.PLANET = ", Animal.PLANET)
 print("sparky.PLANET = ", sparky.PLANET)
+
+Animal.statichello("Hello")
+Dog.statichello("Hello")

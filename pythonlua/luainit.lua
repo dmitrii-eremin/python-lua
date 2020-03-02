@@ -441,7 +441,9 @@ setmetatable(dict, {
 })
 
 function staticmethod(old_fun)
-    return old_fun
+    return function(self,...)
+        old_fun(...)
+    end
 end
 
 function operator_in(item, items)

@@ -7,3 +7,5 @@ sparky.PLANET = 	Earth
 barky.PLANET = 	Earth
 Animal.PLANET = 	Mars
 sparky.PLANET = 	Mars
+Hello from staticmethod
+Hello from staticmethod
