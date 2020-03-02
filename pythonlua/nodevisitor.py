@@ -286,7 +286,6 @@ class NodeVisitor(ast.NodeVisitor):
             decorator_name = self.visit_all(decorator, inline=True)
             # make sure that it uses methods instead of global functions when they are available
             if last_ctx["methods"].exists(decorator_name.split(".")[0]) and last_ctx["class_name"]:
-                print("decorator")
                 decorator_name = ":".join(decorator_name.rsplit(".",1))
                 decorator_name = ".".join([last_ctx["class_name"],decorator_name])
             # add the decorator to the function definition.
