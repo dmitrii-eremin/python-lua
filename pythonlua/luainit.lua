@@ -35,7 +35,7 @@ function isinstance(obj,typ)
     end
     return type(obj) == typ
 end
-
+-- String functions
 local string_meta = getmetatable("")
 string_meta.__add = function(v1, v2)
     if type(v1) == "string" and type(v2) == "string" then
@@ -55,7 +55,10 @@ function string.replace(str,old,new,count)
 end
 oldfind = string.find
 function string.find(str,search,from)
-    index, _ = oldfind(str,search,from)-1
+    index, _ = oldfind(str,search,from)
+    if index ~= nil then
+        return index - 1
+    end
     return index
 end
 string.index = string.find
@@ -67,6 +70,31 @@ function string.format(str,...)
     return str
 end
 
+function string.split(str,spl)
+    lst = list {}
+    f = str:find(spl)
+    s = 0
+    while f ~= nil do
+        lst:append(str:sub(s+1,f))
+        s = f + #spl
+        f = str:find(spl,s+1)
+        
+    end
+    lst:append(str:sub(s+1))
+    return lst
+end
+function string.join(str,lst)
+    nstr = ""
+    l = len(lst)-1 
+    for i,item in enumerate(lst) do
+        if i == l then
+            nstr = nstr .. item
+        else
+            nstr = nstr .. item .. str
+        end
+    end
+    return nstr
+end
 
 
 local g_real_unpack = unpack or table.unpack

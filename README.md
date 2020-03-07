@@ -11,6 +11,10 @@ Lua version: 5.3
 - The latest version includes the use of 'operator overloading', and 'properties' in [classes](#class_extended)
 - [Type comparisons](#type) have been added
 - [Try/except blocks](#try) have been added
+- [String functions](#strings) have been added (find, split, join, replace, basic slices (no step yet) rudimentary format 
+(no typing, e.g. {.2f})
+- The string functions required a large change to the overall code to include luas : operator. Classes etc have been
+changed substantially under the hood, but the user should not be able to notice the change.
 
 ## Usage
 
@@ -193,7 +197,7 @@ foo.bar.baz.one.two.three("Hello, world!")
 Lua code:
 
 ```lua
-foo.bar.baz.one.two.three("Hello, world!")
+foo.bar.baz.one.two:three(("Hello, world!"))
 ```
 </p>
 <p>
@@ -217,6 +221,10 @@ class Animal:
 
     def say_hello(self):
         print("Hello, my name is: " + self.name + "!")
+
+    @staticmethod
+    def statichello(msg):
+        print(msg+" from staticmethod")
 
 
 class Dog(Animal):
@@ -244,6 +252,9 @@ Animal.PLANET = "Mars"
 
 print("Animal.PLANET = ", Animal.PLANET)
 print("sparky.PLANET = ", sparky.PLANET)
+
+Animal.statichello("Hello")
+Dog.statichello("Hello")
 ```
 </p>
 <p>
@@ -251,36 +262,41 @@ Lua code:
 
 ```lua
 local Animal = class(function(Animal)
-    Animal.PLANET = "Earth"
+    Animal.PLANET = ("Earth")
     function Animal.__init__(self, name)
         self.name = name
     end
     function Animal.say_hello(self)
-        print((("Hello, my name is: " + self.name) + "!"))
+        print(((("Hello, my name is: ") + self.name) + ("!")))
     end
+    Animal.statichello = staticmethod(function(msg)
+        print((msg + (" from staticmethod")))
+    end)
     return Animal
 end, "Animal", {}, {}, {})
 local Dog = class(function(Dog)
     function Dog.say_hello(self)
-        print((("Hello, my name is: " + self.name) + "!"))
-        self.bark()
+        print(((("Hello, my name is: ") + self.name) + ("!")))
+        self:bark()
     end
     function Dog.bark(self)
-        print("Bark! Bark! Bark!")
+        print(("Bark! Bark! Bark!"))
     end
     return Dog
 end, "Dog", {Animal}, {}, {})
-local sparky = Animal("Sparky")
-local barky = Dog("Barky")
-sparky.say_hello()
-barky.say_hello()
-barky.bark()
-print("Animal.PLANET = ", Animal.PLANET)
-print("sparky.PLANET = ", sparky.PLANET)
-print("barky.PLANET = ", barky.PLANET)
-Animal.PLANET = "Mars"
-print("Animal.PLANET = ", Animal.PLANET)
-print("sparky.PLANET = ", sparky.PLANET)
+local sparky = Animal(("Sparky"))
+local barky = Dog(("Barky"))
+sparky:say_hello()
+barky:say_hello()
+barky:bark()
+print(("Animal.PLANET = "), Animal.PLANET)
+print(("sparky.PLANET = "), sparky.PLANET)
+print(("barky.PLANET = "), barky.PLANET)
+Animal.PLANET = ("Mars")
+print(("Animal.PLANET = "), Animal.PLANET)
+print(("sparky.PLANET = "), sparky.PLANET)
+Animal:statichello(("Hello"))
+Dog:statichello(("Hello"))
 ```
 </p>
 <p>
@@ -295,6 +311,8 @@ sparky.PLANET = 	Earth
 barky.PLANET = 	Earth
 Animal.PLANET = 	Mars
 sparky.PLANET = 	Mars
+Hello from staticmethod
+Hello from staticmethod
 
 </p>
 </details>
@@ -327,6 +345,12 @@ class example:
     def __str__(self):
         return str(self.value)
 
+
+    def __contains__(self, item):
+        if isinstance(item, str):
+            return True
+        return False
+
     @property
     def prop(self):
         return self.value
@@ -349,6 +373,10 @@ print(a.prop)
 a.prop = 6
 print(a.prop)
 
+if "string" in a:
+    print("yes")
+if 1 in a:
+    print("no")
 ```
 </p>
 <p>
@@ -377,16 +405,22 @@ local example = class(function(example)
     function example.__str__(self)
         return str(self.value)
     end
+    function example.__contains__(self, item)
+        if isinstance(item, str) then
+            return true
+        end
+        return false
+    end
     example.prop = property(function(self)
         return self.value
     end)
-    example.prop = example.prop.setter(function(self, new)
+    example.prop = example.prop:setter(function(self, new)
         if (new > 5) then
             self.value = new
         end
     end)
     return example
-end, "example", {}, {__add = "__add__", __sub = "__sub__", __mul = "__mul__", __div = "__truediv__", __lt = "__lt__", __tostring = "__str__"}, {prop = "example.prop"})
+end, "example", {}, {__add = "__add__", __sub = "__sub__", __mul = "__mul__", __div = "__truediv__", __lt = "__lt__", __tostring = "__str__", __in = "__contains__"}, {prop = "example.prop"})
 local a = example(5)
 local b = example(6)
 print((a + b))
@@ -398,6 +432,12 @@ a.prop = 4
 print(a.prop)
 a.prop = 6
 print(a.prop)
+if (operator_in(("string"), a)) then
+    print(("yes"))
+end
+if (operator_in(1, a)) then
+    print(("no"))
+end
 ```
 </p>
 <p>
@@ -410,6 +450,7 @@ Output:
 5
 5
 6
+yes
 
 </p>
 </details>
@@ -449,9 +490,9 @@ end, "Animal", {}, {}, {})
 local function foo()
     --[[ Function-level docstring ]]
 end
-local name = ("John " + "Parrish")
+local name = (("John ") + ("Parrish"))
 print(name)
-print("Hello!")
+print(("Hello!"))
 ```
 </p>
 <p>
@@ -486,12 +527,12 @@ for k in lst:
 Lua code:
 
 ```lua
-local a = (function() local result = list {} for i in range(5) do for j in range(3) do if (((math.fmod((i * j), 2)) == 0) and (i > 0) and (j > 0)) then result.append((i * j)) end end end return result end)()
+local a = (function() local result = list {} for i in range(5) do for j in range(3) do if (((math.fmod((i * j), 2)) == 0) and (i > 0) and (j > 0)) then result:append((i * j)) end end end return result end)()
 for item in a do
     print(item)
     ::loop_label_1::
 end
-local lst = list {"a", "b", "c", "d", "e"}
+local lst = list {("a"), ("b"), ("c"), ("d"), ("e")}
 local b = (function() local result = dict {} for i in range(5) do result[lst[i]] = (math.pow(i, 2)) end return result end)()
 for k in lst do
     print(k, b[k])
@@ -544,7 +585,7 @@ for i in range(10) do
         if (j == 7) then
             goto loop_label_4
         end
-        print(i, " * ", j, " = ", (i * j))
+        print(i, (" * "), j, (" = "), (i * j))
         ::loop_label_4::
     end
     ::loop_label_3::
@@ -672,7 +713,7 @@ Lua code:
 local function strong(old_fun)
     local function wrapper(...)
         local args = list {...}
-        local s = (("<strong>" + old_fun(unpack(args))) + "</strong>")
+        local s = ((("<strong>") + old_fun(unpack(args))) + ("</strong>"))
         return s
     end
     return wrapper
@@ -680,15 +721,15 @@ end
 local function italic(old_fun)
     local function wrapper(...)
         local args = list {...}
-        local s = (("<em>" + old_fun(unpack(args))) + "</em>")
+        local s = ((("<em>") + old_fun(unpack(args))) + ("</em>"))
         return s
     end
     return wrapper
 end
 local hello = italic(strong(function(name)
-    return (("Hello, " + name) + "!")
+    return ((("Hello, ") + name) + ("!"))
 end))
-print(hello("John"))
+print(hello(("John")))
 ```
 </p>
 <p>
@@ -721,14 +762,14 @@ Lua code:
 ```lua
 local function hello(name, age, nickname, ...)
     age = age or 20
-    nickname = nickname or ""
+    nickname = nickname or ("")
     local args = list {...}
-    print(((("Hello, my name is " + name) + " and I'm ") + str(age)))
-    print(("My nickname is " + nickname))
+    print((((("Hello, my name is ") + name) + (" and I'm ")) + str(age)))
+    print((("My nickname is ") + nickname))
 end
-hello("John", 12, "antikiller")
-hello("Josh", 45)
-hello("Jane")
+hello(("John"), 12, ("antikiller"))
+hello(("Josh"), 45)
+hello(("Jane"))
 ```
 </p>
 <p>
@@ -888,9 +929,9 @@ local foo = 42
 local function bar()
     foo = 34
 end
-print("foo = ", foo)
+print(("foo = "), foo)
 bar()
-print("foo = ", foo)
+print(("foo = "), foo)
 ```
 </p>
 <p>
@@ -939,25 +980,25 @@ Lua code:
 local a = 45
 local b = 0
 if ((a > 5) and (b < 34)) then
-    print("a > 5")
+    print(("a > 5"))
     if (a >= 45) then
-        print("a >= 45")
+        print(("a >= 45"))
     else
-        print("a < 45")
+        print(("a < 45"))
     end
 elseif (a < 5) then
-    print("a < 5")
+    print(("a < 5"))
 else
-    print("a == 5")
+    print(("a == 5"))
 end
 if (a == 45) then
-    print("a == 45")
+    print(("a == 45"))
 end
 local x = 100
 if (50 < x and x < 150) then
-    print("50 < x < 150")
+    print(("50 < x < 150"))
 else
-    print("Something wrong.")
+    print(("Something wrong."))
 end
 ```
 </p>
@@ -1030,20 +1071,20 @@ Lua code:
 
 ```lua
 local a = list {1, 2, 3, 4}
-local b = dict {["name"] = "John", ["age"] = 42}
-local c = "Hello, world!"
+local b = dict {[("name")] = ("John"), [("age")] = 42}
+local c = ("Hello, world!")
 if (2 < 3) then
-    print("2 < 3")
+    print(("2 < 3"))
 end
 print((operator_in(1, a)))
 print((operator_in(2, a)))
 print((operator_in(5, a)))
-print((operator_in("name", b)))
-print((operator_in("surname", b)))
-print((operator_in("Hell", c)))
-print((operator_in("world", c)))
-print((operator_in("Foo", c)))
-print((not operator_in("Hells", c)))
+print((operator_in(("name"), b)))
+print((operator_in(("surname"), b)))
+print((operator_in(("Hell"), c)))
+print((operator_in(("world"), c)))
+print((operator_in(("Foo"), c)))
+print((not operator_in(("Hells"), c)))
 ```
 </p>
 <p>
@@ -1090,7 +1131,7 @@ for i in book:
 Lua code:
 
 ```lua
-local book = dict {["title"] = "Harry Potter and the philosopher's stone", ["author"] = "J. K. Rowling", ["year"] = 1997}
+local book = dict {[("title")] = ("Harry Potter and the philosopher's stone"), [("author")] = ("J. K. Rowling"), [("year")] = 1997}
 local k = 0
 for i in book do
     k = (k + 1)
@@ -1151,17 +1192,17 @@ for i in a do
     if (k > 3) then
         break
     end
-    print("Current i is: ", i)
+    print(("Current i is: "), i)
     strange_sum = (strange_sum + i)
     ::loop_label_8::
 end
-print("After break: ")
+print(("After break: "))
 for i in a do
-    print("Current i is: ", i)
+    print(("Current i is: "), i)
     strange_sum = (strange_sum + i)
     ::loop_label_9::
 end
-print("Some strange sum is: ", strange_sum)
+print(("Some strange sum is: "), strange_sum)
 ```
 </p>
 <p>
@@ -1252,12 +1293,12 @@ Lua code:
 ```lua
 local a = list {1, 2, 5}
 local b = list {list {1, 2, 3}, list {4, 5, 6}, list {7, 8, 9}}
-local c = dict {["firstname"] = "John", ["lastname"] = "Doe", ["age"] = 42, ["children"] = list {dict {["name"] = "Sara", ["age"] = 4}}}
+local c = dict {[("firstname")] = ("John"), [("lastname")] = ("Doe"), [("age")] = 42, [("children")] = list {dict {[("name")] = ("Sara"), [("age")] = 4}}}
 print(a[1])
 print(b[0][1])
-print(c["firstname"], c["lastname"])
-local ch = c["children"][0]
-print(ch["name"], ch["age"])
+print(c[("firstname")], c[("lastname")])
+local ch = c[("children")][0]
+print(ch[("name")], ch[("age")])
 ```
 </p>
 <p>
@@ -1403,18 +1444,18 @@ Lua code:
 local Foo = class(function(Foo)
     Foo.Bar = class(function(Bar)
         function Bar.__init__(self)
-            print("__init__ from Bar")
+            print(("__init__ from Bar"))
         end
         return Bar
     end, "Bar", {}, {}, {})
     function Foo.__init__(self)
-        print("__init__ from Foo")
+        print(("__init__ from Foo"))
         Foo.Bar()
     end
     return Foo
 end, "Foo", {}, {}, {})
 Foo()
-Foo.Bar()
+Foo:Bar()
 ```
 </p>
 <p>
@@ -1473,6 +1514,51 @@ Output:
 </p>
 </details>
 
+### Strings
+<details><summary>Open</summary>
+<p>
+Python code:
+
+```python
+print("test" + "ing")
+print("test{}".format("ing2"))
+str = "ab{}cb{}"
+print(str.replace("b","d"))
+print(str.find("c"))
+print(str.format("asdf","asdf2"))
+print(str[1:5])
+
+print("()".join(str.split("{}")))
+```
+</p>
+<p>
+Lua code:
+
+```lua
+print((("test") + ("ing")))
+print(("test{}"):format(("ing2")))
+local str = ("ab{}cb{}")
+print(str:replace(("b"), ("d")))
+print(str:find(("c")))
+print(str:format(("asdf"), ("asdf2")))
+print(str[Slice(1,5,nil)])
+print(("()"):join(str:split(("{}"))))
+```
+</p>
+<p>
+Output:
+
+testing
+testing2
+ad{}cd{}
+4
+abasdfcbasdf2
+b{}c
+ab()cb()
+
+</p>
+</details>
+
 ### Try
 <details><summary>Open</summary>
 <p>
@@ -1492,14 +1578,14 @@ print('running')
 Lua code:
 
 ```lua
-local ret, err = xpcall(function()
-    print("test")
+xpcall(function()
+    print(("test"))
     xpcall()
-    print("still going")
+    print(("still going"))
 end, function(Error)
-    print("Error in function")
+    print(("Error in function"))
 end)
-print("running")
+print(("running"))
 ```
 </p>
 <p>
@@ -1550,26 +1636,26 @@ local A = class(function(A)
 end, "A", {}, {}, {})
 local a = A()
 if (isinstance(a, A) and (type(a) == A)) then
-    print("class typing works")
+    print(("class typing works"))
 end
 local b = 5.5
 if isinstance(b, float) then
-    print("number typing works")
+    print(("number typing works"))
 end
-local c = "my string"
+local c = ("my string")
 if isinstance(c, str) then
-    print("string typing works")
+    print(("string typing works"))
 end
 local d = list {}
 if ((type(d) == list) and isinstance(d, list)) then
-    print("list type works")
+    print(("list type works"))
 end
 local e = dict {}
 if ((type(e) == dict) and isinstance(e, dict)) then
-    print("dict type works")
+    print(("dict type works"))
 end
 if ((type(d) == dict) or (type(e) == list)) then
-    print("not good")
+    print(("not good"))
 end
 ```
 </p>
@@ -1654,11 +1740,11 @@ local function foo()
 end
 local function varargs(name, ...)
     local args = list {...}
-    print("Name is: ", name)
+    print(("Name is: "), name)
     print(unpack(args))
 end
-varargs("first", 1, 3, 6, 4, 7)
-varargs("second", "hello", "python", "world")
+varargs(("first"), 1, 3, 6, 4, 7)
+varargs(("second"), ("hello"), ("python"), ("world"))
 ```
 </p>
 <p>
@@ -1775,8 +1861,8 @@ Lua code:
 
 ```lua
 do
-    local output_file = open("output")
-    output_file.write(input_file.read())
+    local output_file = open(("output"))
+    output_file:write(input_file:read())
 end
 ```
 </p>
