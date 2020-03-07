@@ -316,8 +316,9 @@ setmetatable(list, {
                         index = #result._data + index
                     end
                     return rawget(result._data, index + 1)
+                elseif type(index) == Slice then
+                    return index:process(self)
                 end
-
                 return _stripself(methods[index])
             end,
             __newindex = function(self, index, value)
@@ -599,13 +600,27 @@ end, "property", {}, {}, {})
 
 Slice = class(function(Slice)
     function Slice.__init__(self,lower,upper,step)
-        self.lower = lower+1
+        if lower == nil then
+            self.lower = nil
+        else
+            self.lower = lower+1
+        end
         self.upper = upper
         self.step = step
     end
     function Slice.process(self,obj)
         if type(obj) == "string" then
             return obj:sub(self.lower,self.upper)
+        elseif type(obj) == list then
+            nobj = list {}
+            start = self.lower
+            stop = self.upper
+            if start == nil then start = 1 end
+            if stop == nil then stop = len(obj) end
+            for i in range(start-1,stop) do
+                nobj:append(obj[i])
+            end
+            return nobj
         end
     end
     return Slice
