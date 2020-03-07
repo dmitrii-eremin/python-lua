@@ -522,8 +522,12 @@ function class(class_init, name, bases, mtmethods, properties)
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local object = {}
-        nmt = {}
+        local nmt = {}
         nmt.__type = c
+        local hashid = tostring(c) .. "<" .. tostring(object):gsub("table: ", "", 1) .. ">"
+        nmt.__tostring = function(self)
+            return hashid
+        end
         for k,v in pairs(c.mtmethods) do
             nmt[k] = c.attrs[v]
         end
