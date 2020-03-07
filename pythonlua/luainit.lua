@@ -1,8 +1,6 @@
 --[[
     Begin the lua pythonization.
 --]]
--- for type comparisons
-float = "number"
 
 -- overwriting type so we can type dicts and lists etc.
 rawtype = type
@@ -23,7 +21,7 @@ function type(obj)
 end
 
 function isinstance(obj,typ)
-    if (typ == int) then
+    if (typ == int or typ == float) then
         typ = "number"
     elseif (typ == str) then
         typ = "string"
@@ -110,6 +108,7 @@ abs = math.abs
 ascii = string.byte
 chr = string.char
 int = tonumber
+float = tonumber
 str = tostring
 
 function all(iterable)
