@@ -211,6 +211,16 @@ function enumerate(t, start)
     end
 end
 
+function getattr(obj, attr)
+    return obj[attr]
+end
+function setattr(obj, attr, v)
+    obj[attr] = v
+end
+function delattr(obj, attr)
+    obj[attr] = nil
+end
+
 list = {}
 setmetatable(list, {
     __call = function(_, t)
