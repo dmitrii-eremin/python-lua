@@ -31,7 +31,7 @@ class Context:
         self.ctx_stack.append(value)
 
     def top(self):
-        return False#len(self.ctx_stack) <= 1
+        return len(self.ctx_stack) <= 1
 
     def pop(self):
         """Pop last context state"""

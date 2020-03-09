@@ -9,6 +9,7 @@ class Config:
             "class": {
                 "return_at_the_end": False,
             },
+            "top_locals": False,
         }
 
         if filename is not None:

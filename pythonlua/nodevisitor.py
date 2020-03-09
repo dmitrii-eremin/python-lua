@@ -36,7 +36,7 @@ class NodeVisitor(ast.NodeVisitor):
         if last_ctx["class_name"]:
             target = ".".join([last_ctx["class_name"], target])
 
-        if not self.context.top() and "." not in target and not last_ctx["locals"].exists(target_name):
+        if not (self.context.top() and not self.config["top_locals"]) and "." not in target and not last_ctx["locals"].exists(target_name) and not last_ctx["globals"].exists(target_name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(target)
 
@@ -115,7 +115,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         local_keyword = ""
         last_ctx = self.context.last()
-        if not self.context.top() and not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name):
+        if not (self.context.top() and not self.config["top_locals"]) and not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(node.name)
 
@@ -319,7 +319,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         # added the top function for the context, since we want things in the topmost layer to be defined globally
         # I should probably add something in config for it but at the moment I am too lazy.
-        if not self.context.top() and "." not in name and not last_ctx["locals"].exists(name):
+        if not (self.context.top() and not self.config["top_locals"]) and "." not in name and not last_ctx["locals"].exists(name) and not last_ctx["globals"].exists(name):
             local_keyword = "local "
             last_ctx["locals"].add_symbol(name)
 
