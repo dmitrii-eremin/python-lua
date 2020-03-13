@@ -142,13 +142,13 @@ function bool(x)
 end 
 
 function callable(x)
-    local x_type = type(x)
+    local x_type = rawtype(x)
     if x_type == "function" then
         return true
     end
-    if x_type == "table" then
+    if x_type == "table" and type(x) ~= list and type(x) ~= dict then
         local meta = getmetatable(x)
-        return type(meta.__call) == "function" 
+        return rawtype(meta.__call) == "function" 
     end
 
     return false
@@ -639,29 +639,6 @@ Slice = class(function(Slice)
     end
     return Slice
 end, "Slice", {}, {}, {})
-
--- supercount = 0
--- function super(base,instance)
---     obj = {}
---     mt = {}
---     function mt.__index(self,key)
---         print(key)
---         if callable(base[key]) then
---             return base[key]
---         else
---             return instance[key]
---         end
---     end
---     function mt.__newindex(self,key,value)
---         instance[key] = value
---     end
---     function mt.__get(self)
---         print("getting")
---         return instance
---     end
---     setmetatable(obj,mt)    
---     return obj
--- end
 
 --[[
     End of the lua pythonization.
