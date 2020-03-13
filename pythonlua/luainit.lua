@@ -318,7 +318,6 @@ setmetatable(list, {
         end
 
         local iterator_index = nil
-
         setmetatable(result, {
             __index = function(self, index)
                 if type(index) == "number" then
@@ -345,9 +344,19 @@ setmetatable(list, {
 
                 return v
             end,
-            __type = list
+            __type = list,
+            __tostring = function(self)
+                local str = "["
+                for i,v in ipairs(self._data) do
+                    if i < #self._data then
+                        str = str .. v .. ", "
+                    else
+                        str = str .. v
+                    end
+                end
+                return str .. "]"
+            end
         })
-
         return result
     end,
     __type = list,
@@ -448,7 +457,7 @@ setmetatable(dict, {
                 return value
             end
         end
-        
+
         setmetatable(result, {
             __index = function(self, index)
                 if result._data[index] ~= nil then
@@ -468,7 +477,18 @@ setmetatable(dict, {
 
                 return key_index            
             end,
-            __type = dict
+            __type = dict,
+            __tostring = function(self)
+                local str = ""
+                for k,v in pairs(self._data) do
+                    if (str == "") then
+                        str = "{ " .. k .. ": " .. v
+                    else
+                        str = str .. ", " .. k .. ": " .. v
+                    end
+                end
+                return str .. " }"
+            end
         })
         
         return result
@@ -639,6 +659,29 @@ Slice = class(function(Slice)
     end
     return Slice
 end, "Slice", {}, {}, {})
+
+-- supercount = 0
+-- function super(base,instance)
+--     obj = {}
+--     mt = {}
+--     function mt.__index(self,key)
+--         print(key)
+--         if callable(base[key]) then
+--             return base[key]
+--         else
+--             return instance[key]
+--         end
+--     end
+--     function mt.__newindex(self,key,value)
+--         instance[key] = value
+--     end
+--     function mt.__get(self)
+--         print("getting")
+--         return instance
+--     end
+--     setmetatable(obj,mt)    
+--     return obj
+-- end
 
 --[[
     End of the lua pythonization.
