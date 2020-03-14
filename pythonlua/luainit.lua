@@ -258,9 +258,9 @@ setmetatable(list, {
         end
 
         methods.pop = function(index)
-            index = index or #result._data
-            local value = result._data[index]
-            table.remove(result._data, index)
+            index = index or (#result._data-1)
+            local value = result._data[index+1]
+            table.remove(result._data, index+1)
             return value
         end
 
@@ -540,8 +540,10 @@ function class(class_init, name, bases, mtmethods, properties)
     bases = bases or {}
     local c = {}
     
+    -- add the attributes, properties and metamethods by inheritance
     c.properties = {}
     c.attrs = {}
+    c.mtmethods = {}
     for _, base in ipairs(bases) do
         for k, v in pairs(base.attrs) do
             c.attrs[k] = v
@@ -549,16 +551,51 @@ function class(class_init, name, bases, mtmethods, properties)
         for k, v in pairs(base.properties) do
             c.properties[k] = v
         end
+        for k, v in pairs(base.mtmethods) do
+            c.mtmethods[k] = v
+        end
     end
     c._bases = bases
+
+    -- initialize the attributes, properties and metamethods
     c.attrs = class_init(c.attrs)
-    
     for k,v in pairs(properties) do
         c.properties[k] = v
     end
+    for k,v in pairs(mtmethods) do
+        c.mtmethods[k] = v
+    end
+
+    -- premake the instance metatable to be set on every object
+    local imt = {}
+    imt.__type = c
+    imt.__tostring = function(self)
+        return self._hashid
+    end
+    for k,v in pairs(c.mtmethods) do
+        imt[k] = c.attrs[v]
+    end
+    imt.__index = function(tbl, idx)
+        local attr = c.attrs[idx]
+        if (c.properties[idx]) then
+            return attr.gfunc(tbl)
+        end
+        return attr
+    end
+    imt.__newindex = function(tbl, idx, new)
+        local attr = c.attrs[idx]
+        if (c.properties[idx]) then
+            attr.sfunc(tbl,new)
+        else
+            rawset(tbl,idx,new)
+        end
+    end
+
+    -- class definition metatable, referred to on the class object, not instances
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
         local o = nil
+        -- check the new method, to know if we should allocate a new table
         if c.attrs.__new__ ~= nil then
             o = c.attrs.__new__(c)
             if o == nil then
@@ -567,39 +604,17 @@ function class(class_init, name, bases, mtmethods, properties)
         else
             o = {}
         end
+        -- if the object is old, don't reset the metatable, otherwise set the instance metatable
         if getmetatable(o) == nil then
-            local nmt = {}
-            nmt.__type = c
-            local hashid = tostring(c) .. "<" .. tostring(o):gsub("table: ", "", 1) .. ">"
-            nmt.__tostring = function(self)
-                return hashid
-            end
-            for k,v in pairs(c.mtmethods) do
-                nmt[k] = c.attrs[v]
-            end
-            nmt.__index = function(tbl, idx)
-                local attr = c.attrs[idx]
-                if (c.properties[idx]) then
-                    return attr.gfunc(tbl)
-                end
-                return attr
-            end
-            nmt.__newindex = function(tbl, idx, new)
-                local attr = c.attrs[idx]
-                if (c.properties[idx]) then
-                    attr.sfunc(tbl,new)
-                else
-                    rawset(tbl,idx,new)
-                end
-            end
-            setmetatable(o, nmt)
+            o._hashid = tostring(c) .. "<" .. tostring(o):gsub("table: ", "", 1) .. ">"
+            setmetatable(o, imt)
         end
+        -- initialize the object if it has the init function
         if type(o.__init__) == "function" then
             o:__init__(...)
         end
         return o
     end
-    c.mtmethods = mtmethods
     mt.__type = c
     mt.__index = function(self,key)
         if callable(c.attrs[key]) then
@@ -615,19 +630,13 @@ function class(class_init, name, bases, mtmethods, properties)
         return name   -- perhaps it is better if the type table is not the main object, but instead a separate table? the __tostring of the main object might be confusing.
     end
     setmetatable(c, mt)
-    cmt = {}
-    cmt.__call = function(...)
+
+    -- attributes metatable for redirecting calls
+    amt = {}
+    amt.__call = function(...)
         return mt.__call(...)
     end
-    -- cmt.__index = function(self,key)
-    --     rg = rawget(self,key)
-    --     if rawtype(rg) == "function" then
-    --         return _stripself(rg)
-    --     else
-    --         return rg
-    --     end
-    -- end
-    setmetatable(c.attrs,cmt)
+    setmetatable(c.attrs,amt)
 
     return c
 end
@@ -677,28 +686,6 @@ Slice = class(function(Slice)
     return Slice
 end, "Slice", {}, {}, {})
 
--- supercount = 0
--- function super(base,instance)
---     obj = {}
---     mt = {}
---     function mt.__index(self,key)
---         print(key)
---         if callable(base[key]) then
---             return base[key]
---         else
---             return instance[key]
---         end
---     end
---     function mt.__newindex(self,key,value)
---         instance[key] = value
---     end
---     function mt.__get(self)
---         print("getting")
---         return instance
---     end
---     setmetatable(obj,mt)    
---     return obj
--- end
 
 --[[
     End of the lua pythonization.
