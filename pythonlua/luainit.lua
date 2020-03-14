@@ -148,6 +148,7 @@ function callable(x)
     end
     if x_type == "table" and type(x) ~= list and type(x) ~= dict then
         local meta = getmetatable(x)
+        if meta == nil then return false end
         return rawtype(meta.__call) == "function" 
     end
 
@@ -529,10 +530,16 @@ function operator_in(item, items)
 end
 
 -- Lua classes
+object = {
+    __new__ = function(self,cls)
+        return {}
+    end
+}
+
 function class(class_init, name, bases, mtmethods, properties)
     bases = bases or {}
-
     local c = {}
+    
     c.properties = {}
     c.attrs = {}
     for _, base in ipairs(bases) do
@@ -551,36 +558,43 @@ function class(class_init, name, bases, mtmethods, properties)
     end
     local mt = getmetatable(c) or {}
     mt.__call = function(_, ...)
-        local object = {}
-        local nmt = {}
-        nmt.__type = c
-        local hashid = tostring(c) .. "<" .. tostring(object):gsub("table: ", "", 1) .. ">"
-        nmt.__tostring = function(self)
-            return hashid
+        local o = nil
+        if c.attrs.__new__ ~= nil then
+            o = c.attrs.__new__(c)
+        else
+            o = {}
         end
-        for k,v in pairs(c.mtmethods) do
-            nmt[k] = c.attrs[v]
-        end
-        nmt.__index = function(tbl, idx)
-            local attr = c.attrs[idx]
-            if (c.properties[idx]) then
-                return attr.gfunc(tbl)
+        if getmetatable(o) == nil then
+            local nmt = {}
+            nmt.__type = c
+            local hashid = tostring(c) .. "<" .. tostring(o):gsub("table: ", "", 1) .. ">"
+            nmt.__tostring = function(self)
+                return hashid
             end
-            return attr
-        end
-        nmt.__newindex = function(tbl, idx, new)
-            local attr = c.attrs[idx]
-            if (c.properties[idx]) then
-                attr.sfunc(tbl,new)
-            else
-                rawset(tbl,idx,new)
+            for k,v in pairs(c.mtmethods) do
+                nmt[k] = c.attrs[v]
             end
+            nmt.__index = function(tbl, idx)
+                local attr = c.attrs[idx]
+                if (c.properties[idx]) then
+                    return attr.gfunc(tbl)
+                end
+                return attr
+            end
+            nmt.__newindex = function(tbl, idx, new)
+                local attr = c.attrs[idx]
+                if (c.properties[idx]) then
+                    attr.sfunc(tbl,new)
+                else
+                    rawset(tbl,idx,new)
+                end
+            end
+            setmetatable(o, nmt)
         end
-        setmetatable(object, nmt)
-        if type(object.__init__) == "function" then
-            object:__init__(...)
+        if type(o.__init__) == "function" then
+            o:__init__(...)
         end
-        return object
+        return o
     end
     c.mtmethods = mtmethods
     mt.__type = c

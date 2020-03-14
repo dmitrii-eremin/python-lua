@@ -1,4 +1,5 @@
 class example:
+
     def __init__(self, v):
         self.value = v
 
@@ -34,6 +35,15 @@ class example:
     def prop(self,new):
         if new > 5:
             self.value = new
+class A:
+    obj = None
+    def __new__(cls, *args, **kwargs):
+        if not cls.obj:
+            cls.obj = object.__new__(cls)
+        return cls.obj
+
+    def __init__(self):
+        print('init')
 
 
 a = example(5)
@@ -52,3 +62,7 @@ if "string" in a:
     print("yes")
 if 1 in a:
     print("no")
+
+a = A()
+b = A()
+print(a==b)
