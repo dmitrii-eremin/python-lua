@@ -561,6 +561,9 @@ function class(class_init, name, bases, mtmethods, properties)
         local o = nil
         if c.attrs.__new__ ~= nil then
             o = c.attrs.__new__(c)
+            if o == nil then
+                return nil
+            end
         else
             o = {}
         end
