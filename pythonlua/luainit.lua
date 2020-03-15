@@ -53,7 +53,7 @@ function string.replace(str,old,new,count)
 end
 oldfind = string.find
 function string.find(str,search,from)
-    index, _ = oldfind(str,search,from)
+    index, _ = oldfind(str,search,from,true)
     if index ~= nil then
         return index - 1
     end
@@ -669,8 +669,12 @@ Slice = class(function(Slice)
         self.step = step
     end
     function Slice.process(self,obj)
+        start = self.lower
+        stop = self.upper
+        if start == nil then start = 1 end
+        if stop == nil then stop = len(obj) end
         if type(obj) == "string" then
-            return obj:sub(self.lower,self.upper)
+            return obj:sub(start,stop)
         elseif type(obj) == list then
             nobj = list {}
             start = self.lower
