@@ -10,9 +10,9 @@ from .unaryopdesc import UnaryOperationDesc
 from .context import Context
 from .loopcounter import LoopCounter
 from .tokenendmode import TokenEndMode
-
+import re
 class NodeVisitor(ast.NodeVisitor):
-    LUACODE = "[[luacode]]"
+    LUACODE = r"^\[\[luacode(=.+)?\]\].*"
 
     """Node visitor"""
     def __init__(self, context=None, config=None):
@@ -61,6 +61,11 @@ class NodeVisitor(ast.NodeVisitor):
         line = line.format(**values)
 
         self.emit("{target} = {line}".format(target=target, line=line))
+
+    def visit_Assert(self,node):
+        line = "assert({})"
+        print(node.__dict__)
+        self.emit(line.format(self.visit_all(node.test, True)))
 
     def visit_Attribute(self, node):
         """Visit attribute"""
@@ -549,13 +554,26 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Str(self, node):
         """Visit str"""
         value = node.s
-        if value.startswith(NodeVisitor.LUACODE):
-            value = value[len(NodeVisitor.LUACODE):]
+        m = re.match(NodeVisitor.LUACODE, value)
+        if m:
+            value = value[m.end():]
+            if m.groups()[0]:
+                fn = m.groups()[0][1:]
+                try:
+                    import os
+                    with open(fn,'r') as f:
+                        lns = f.readlines()
+                    value = "".join(lns) + "\n" + value
+                except:
+                    print('Warning: LUA file ({}) not found'.format(os.path.join(os.getcwd(),fn)))
             self.emit(value)
         elif self.context.last()["docstring"]:
             self.emit('--[[ {} ]]'.format(node.s))
         else:
-            self.emit('("{}")'.format(node.s))
+            if '\n' in node.s:
+                self.emit('([[{}]])'.format(node.s))
+            else:
+                self.emit('("{}")'.format(node.s))
 
     def visit_Subscript(self, node):
         """Visit subscript"""

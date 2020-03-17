@@ -7,3 +7,6 @@ print(get_summ(3, 5))
 local c = 45
 print(c)
 """
+
+
+"""[[luacode=tests\\luacode.lua]]"""

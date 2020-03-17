@@ -7,3 +7,8 @@ print(str.format("asdf","asdf2"))
 print(str[1:5])
 
 print("()".join(str.split("{}")))
+
+print("""a
+multiline
+string
+""")

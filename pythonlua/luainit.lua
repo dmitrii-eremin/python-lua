@@ -191,6 +191,7 @@ function range(from, to, step)
     end
 end
 
+
 function enumerate(t, start)
     start = start or 0
 
@@ -501,15 +502,15 @@ setmetatable(dict, {
 })
 
 function staticmethod(old_fun)
-    return function(...)
-        return old_fun(...)
-    end
+    return old_fun
 end
-
+-- make an object with all redirected functions to avoid taking up memory
+_strippedmethods = {}
 function _stripself(old_fun)
-    return function(self,...)
-        return old_fun(...)
+    if not _strippedmethods[old_fun] then
+        _strippedmethods[old_fun] = function(self,...) return old_fun(...) end
     end
+    return _strippedmethods[old_fun]
 end
 
 function operator_in(item, items)
