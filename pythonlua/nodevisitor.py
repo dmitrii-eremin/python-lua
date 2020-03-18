@@ -99,6 +99,9 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit break"""
         self.emit("break")
 
+    def visit_Bytes(self, node):
+        self.emit(str(int.from_bytes(node.s, byteorder='big')))
+
     def visit_Call(self, node):
         """Visit function call"""
         line = "{name}({arguments})"
