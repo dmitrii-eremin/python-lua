@@ -598,9 +598,12 @@ function class(class_init, name, bases, mtmethods, properties)
         local o = nil
         -- check the new method, to know if we should allocate a new table
         if c.attrs.__new__ ~= nil then
-            o = c.attrs.__new__(c)
+            o = c.attrs.__new__(c,...)
             if o == nil then
                 return nil
+            end
+            if rawtype(o) == "userdata" then
+                return o
             end
         else
             o = {}
