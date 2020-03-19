@@ -64,7 +64,6 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_Assert(self,node):
         line = "assert({})"
-        print(node.__dict__)
         self.emit(line.format(self.visit_all(node.test, True)))
 
     def visit_Attribute(self, node):

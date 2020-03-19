@@ -213,6 +213,9 @@ function enumerate(t, start)
     end
 end
 
+function hasattr(obj, attr)
+    return (obj[attr] ~= nil)
+end
 function getattr(obj, attr)
     return obj[attr]
 end
@@ -246,7 +249,7 @@ setmetatable(list, {
         end
 
         methods.insert = function(index, value)
-            table.insert(result._data, index, value)
+            table.insert(result._data, index+1, value)
         end
 
         methods.remove = function(value)
