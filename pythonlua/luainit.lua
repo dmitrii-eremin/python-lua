@@ -581,8 +581,12 @@ function class(class_init, name, bases, mtmethods, properties)
     end
     imt.__index = function(tbl, idx)
         local attr = c.attrs[idx]
+        
         if (c.properties[idx]) then
             return attr.gfunc(tbl)
+        end
+        if attr == nil and idx ~= "__init__" and (callable(c.attrs['__getitem__'])) then
+            return c.attrs.__getitem__(tbl,idx)
         end
         return attr
     end
@@ -590,6 +594,8 @@ function class(class_init, name, bases, mtmethods, properties)
         local attr = c.attrs[idx]
         if (c.properties[idx]) then
             attr.sfunc(tbl,new)
+        -- elseif attr == nil and callable(c.attrs['__setitem__']) then
+        --     c.attrs.__setitem__(tbl,idx,new)
         else
             rawset(tbl,idx,new)
         end

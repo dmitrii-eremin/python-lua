@@ -287,6 +287,11 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.output.append(output)
 
+    def visit_ExtSlice(self,node):
+        dims_values = [self.visit_all(n,inline=True) for n in node.dims]
+        value = ", ".join(dims_values)
+        self.emit("{{{}}}".format(value))
+
     def visit_FunctionDef(self, node):
         """Visit function definition"""
 
