@@ -585,11 +585,16 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Subscript(self, node):
         """Visit subscript"""
         line = "{name}[{index}]"
-        values = {
-            "name": self.visit_all(node.value, inline=True),
-            "index": self.visit_all(node.slice, inline=True),
-        }
-
+        if not isinstance(node.slice,ast.Slice) and not isinstance(node.slice,ast.ExtSlice) and isinstance(node.slice.value,ast.Tuple):
+            values = {
+                "name": self.visit_all(node.value, inline=True),
+                "index": "{"+self.visit_all(node.slice, inline=True)+"}",
+            }
+        else:
+            values = {
+                "name": self.visit_all(node.value, inline=True),
+                "index": self.visit_all(node.slice, inline=True),
+            }
         self.emit(line.format(**values))
 
     def visit_Try(self,node):
