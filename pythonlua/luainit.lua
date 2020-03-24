@@ -42,7 +42,7 @@ string_meta.__add = function(v1, v2)
     return v1 + v2
 end
 string_meta.__index = function(str,key)
-    if type(key) == Slice then
+    if type(key) == slice then
         return key:process(str)
     end
     return string[key]
@@ -330,7 +330,7 @@ setmetatable(list, {
                         index = #result._data + index
                     end
                     return rawget(result._data, index + 1)
-                elseif type(index) == Slice then
+                elseif type(index) == slice then
                     return index:process(self)
                 end
                 return _stripself(methods[index])
@@ -671,8 +671,8 @@ property = class(function(property)
     return property
 end, "property", {}, {}, {})
 
-Slice = class(function(Slice)
-    function Slice.__init__(self,lower,upper,step)
+slice = class(function(slice)
+    function slice.__init__(self,lower,upper,step)
         if lower == nil then
             self.lower = nil
         else
@@ -681,7 +681,7 @@ Slice = class(function(Slice)
         self.upper = upper
         self.step = step
     end
-    function Slice.process(self,obj)
+    function slice.process(self,obj)
         start = self.lower
         stop = self.upper
         if start == nil then start = 1 end
@@ -700,8 +700,8 @@ Slice = class(function(Slice)
             return nobj
         end
     end
-    return Slice
-end, "Slice", {}, {}, {})
+    return slice
+end, "slice", {}, {}, {})
 
 
 --[[

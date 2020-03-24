@@ -550,7 +550,7 @@ class NodeVisitor(ast.NodeVisitor):
             'upper': self.visit_all(node.upper,inline=True) if node.upper else "nil",
             'step': self.visit_all(node.step,inline=True)  if node.step else "nil"
         }
-        self.emit("Slice({lower},{upper},{step})".format(**values))
+        self.emit("slice({lower},{upper},{step})".format(**values))
 
     def visit_Starred(self, node):
         """Visit starred object"""
