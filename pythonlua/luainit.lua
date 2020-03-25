@@ -226,6 +226,89 @@ function delattr(obj, attr)
     obj[attr] = nil
 end
 
+tuple = {}
+setmetatable(tuple, {
+    __call = function(_, t)
+        local result = {}
+
+        result._data = {}
+        for _, v in ipairs(t) do
+            table.insert(result._data, v)
+        end
+    
+        local methods = {}
+
+        methods.index = function(value, start, enda)
+            start = start or 1
+            enda = enda or #result._data
+
+            for i = start, enda, 1 do
+                if result._data[i] == value then
+                    return i
+                end
+            end
+
+            return nil
+        end
+
+        methods.count = function(value)
+            local cnt = 0
+            for _, v in ipairs(result._data) do
+                if v == value then
+                    cnt = cnt + 1
+                end
+            end
+
+            return cnt
+        end
+
+        local iterator_index = nil
+        setmetatable(result, {
+            __index = function(self, index)
+                if type(index) == "number" then
+                    if index < 0 then
+                        index = #result._data + index
+                    end
+                    return rawget(result._data, index + 1)
+                elseif type(index) == slice then
+                    return index:process(self)
+                end
+                return _stripself(methods[index])
+            end,
+            __newindex = function(self, index, value)                
+                error("Attempt to set index in tuple.")
+            end,
+            __call = function(self, _, idx)
+                if idx == nil and iterator_index ~= nil then
+                    iterator_index = nil
+                end
+
+                local v = nil
+                iterator_index, v = next(result._data, iterator_index)
+
+                return v
+            end,
+            __type = tuple,
+            __tostring = function(self)
+                local str = "("
+                for i,v in ipairs(self._data) do
+                    if i < #self._data then
+                        str = str .. tostring(v) .. ", "
+                    else
+                        str = str .. tostring(v)
+                    end
+                end
+                return str .. ")"
+            end
+        })
+        return result
+    end,
+    __type = tuple,
+    __tostring = function(self)
+        return "tuple"
+    end
+})
+
 list = {}
 setmetatable(list, {
     __call = function(_, t)
@@ -354,9 +437,9 @@ setmetatable(list, {
                 local str = "["
                 for i,v in ipairs(self._data) do
                     if i < #self._data then
-                        str = str .. v .. ", "
+                        str = str .. tostring(v) .. ", "
                     else
-                        str = str .. v
+                        str = str .. tostring(v)
                     end
                 end
                 return str .. "]"
@@ -487,9 +570,9 @@ setmetatable(dict, {
                 local str = ""
                 for k,v in pairs(self._data) do
                     if (str == "") then
-                        str = "{ " .. k .. ": " .. v
+                        str = "{ " .. tostring(k) .. ": " .. tostring(v)
                     else
-                        str = str .. ", " .. k .. ": " .. v
+                        str = str .. ", " .. tostring(k) .. ": " .. tostring(v)
                     end
                 end
                 return str .. " }"

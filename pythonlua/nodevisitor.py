@@ -290,7 +290,7 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_ExtSlice(self,node):
         dims_values = [self.visit_all(n,inline=True) for n in node.dims]
         value = ", ".join(dims_values)
-        self.emit("{{{}}}".format(value))
+        self.emit("tuple {{{}}}".format(value))
 
     def visit_FunctionDef(self, node):
         """Visit function definition"""
@@ -588,7 +588,7 @@ class NodeVisitor(ast.NodeVisitor):
         if not isinstance(node.slice,ast.Slice) and not isinstance(node.slice,ast.ExtSlice) and isinstance(node.slice.value,ast.Tuple):
             values = {
                 "name": self.visit_all(node.value, inline=True),
-                "index": "{"+self.visit_all(node.slice, inline=True)+"}",
+                "index": "tuple {"+self.visit_all(node.slice, inline=True)+"}",
             }
         else:
             values = {
