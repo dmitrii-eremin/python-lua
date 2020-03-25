@@ -314,11 +314,17 @@ setmetatable(list, {
     __call = function(_, t)
         local result = {}
 
-        result._data = {}
-        for _, v in ipairs(t) do
-            table.insert(result._data, v)
+        if isinstance(t,tuple) or isinstance(t,list) then
+            result._data = {}
+            for _, v in ipairs(t._data) do
+                table.insert(result._data, v)
+            end
+        else
+            result._data = {}
+            for _, v in ipairs(t) do
+                table.insert(result._data, v)
+            end
         end
-    
         local methods = {}
 
         methods.append = function(value)
