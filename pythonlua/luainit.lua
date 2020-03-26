@@ -45,6 +45,9 @@ string_meta.__index = function(str,key)
     if type(key) == slice then
         return key:process(str)
     end
+    if rawtype(key) == "number" then
+        return string.sub(str, key+1, key+1)
+    end
     return string[key]
 end
 function string.replace(str,old,new,count)
@@ -110,6 +113,7 @@ chr = string.char
 int = tonumber
 float = tonumber
 str = tostring
+coroutine.pause = coroutine.yield
 
 function all(iterable)
     for element in iterable do
@@ -632,7 +636,6 @@ object = {
 function class(class_init, name, bases, mtmethods, properties)
     bases = bases or {}
     local c = {}
-    
     -- add the attributes, properties and metamethods by inheritance
     c.properties = {}
     c.attrs = {}
@@ -719,7 +722,7 @@ function class(class_init, name, bases, mtmethods, properties)
     end
     mt.__type = c
     mt.__index = function(self,key)
-        if callable(c.attrs[key]) then
+        if type(c.attrs[key]) == "function" then
             return _stripself(c.attrs[key])
         else
             return c.attrs[key]
