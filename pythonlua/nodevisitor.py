@@ -118,15 +118,19 @@ class NodeVisitor(ast.NodeVisitor):
 
     def visit_ClassDef(self, node):
         """Visit class definition"""
+
         bases = [self.visit_all(base, inline=True) for base in node.bases]
 
         local_keyword = ""
         last_ctx = self.context.last()
+
         if not (self.context.top() and not self.config["top_locals"]) and not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
             local_keyword = "local "
-        if not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
+        if not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
             last_ctx["locals"].add_symbol(node.name)
-
+        for i,base in enumerate(bases):
+            if last_ctx['class_name'] and last_ctx['locals'].exists(base):
+                bases[i] = '.'.join([last_ctx['class_name'],base])
         name = node.name
         if last_ctx["class_name"]:
             name = ".".join([last_ctx["class_name"], name])

@@ -16,6 +16,12 @@ Lua version: 5.3
 - The string functions required a large change to the overall code to include luas : operator. Classes etc have been
 changed substantially under the hood, but the user should not be able to notice the change.
 
+## Unsupported features
+
+- Assigning static methods to variables and calling them is not permitted, only call static methods directly
+- Assigning nested classes to variables and initializing them is not permitted, only initialize nested classes from 
+within the main class directly.
+
 ## Usage
 
 ### As a standalone application
