@@ -30,8 +30,8 @@ class BinaryOperationDesc:
             "format": "math.fmod({left}, {right})",
         },
         ast.Pow: {
-            "value": "",
-            "format": "math.pow({left}, {right})",
+            "value": "^",
+            "format": _DEFAULT_FORMAT,
         },
         ast.FloorDiv: {
             "value": "/",
