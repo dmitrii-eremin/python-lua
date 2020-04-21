@@ -533,6 +533,9 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit name constant"""
         self.emit(NameConstantDesc.NAME[node.value])
 
+    def visit_Nonlocal(self, node):
+        """Visit nonlocal"""
+
     def visit_Num(self, node):
         """Visit number"""
         self.emit(str(node.n))
