@@ -11,10 +11,13 @@ from .context import Context
 from .loopcounter import LoopCounter
 from .tokenendmode import TokenEndMode
 import re
+
+
 class NodeVisitor(ast.NodeVisitor):
     LUACODE = r"^\[\[luacode(=.+)?\]\].*"
 
     """Node visitor"""
+
     def __init__(self, context=None, config=None):
         self.context = context if context is not None else Context()
         self.config = config
@@ -35,15 +38,27 @@ class NodeVisitor(ast.NodeVisitor):
 
         if last_ctx["class_name"]:
             target = ".".join([last_ctx["class_name"], target])
-        if not (self.context.top() and not self.config["top_locals"]) and "." not in target and not last_ctx["locals"].exists(target_name) and not last_ctx["globals"].exists(target_name):
+        if not (self.context.top() and not self.config["top_locals"]) and "." not in target and not last_ctx[
+            "locals"].exists(target_name) and not last_ctx["globals"].exists(target_name):
             local_keyword = "local "
-        if "." not in target and not last_ctx["locals"].exists(target_name) and not last_ctx["globals"].exists(target_name):
+        if "." not in target and not last_ctx["locals"].exists(target_name) and not last_ctx["globals"].exists(
+                target_name):
             last_ctx["locals"].add_symbol(target)
-
 
         self.emit("{local}{target} = {value}".format(local=local_keyword,
                                                      target=target,
                                                      value=value))
+
+    def visit_AnnAssign(self, node):
+        """Visit AnnAssign
+        for x: int = 5
+        type hint / type alias"""
+        target = self.visit_all(node.target, inline=True)
+        value = self.visit_all(node.value, inline=True)
+
+        self.emit("local {target} = {value}"
+                  .format(target=target,
+                          value=value))
 
     def visit_AugAssign(self, node):
         """Visit augassign"""
@@ -62,7 +77,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.emit("{target} = {line}".format(target=target, line=line))
 
-    def visit_Assert(self,node):
+    def visit_Assert(self, node):
         line = "assert({})"
         self.emit(line.format(self.visit_all(node.test, True)))
 
@@ -91,7 +106,7 @@ class NodeVisitor(ast.NodeVisitor):
         """Visit boolean operation"""
         operation = BooleanOperationDesc.OPERATION[node.op.__class__]
         # changed this for cases where multiple boolops are linked (e.g.: a and b and c)
-        line = "({})".format(operation.join([self.visit_all(v,True) for v in node.values]))
+        line = "({})".format(operation.join([self.visit_all(v, True) for v in node.values]))
         self.emit(line)
 
     def visit_Break(self, node):
@@ -106,10 +121,10 @@ class NodeVisitor(ast.NodeVisitor):
         line = "{name}({arguments})"
         if 'attr' in node.func.__dict__:
             name = self.visit_all(node.func, inline=True)
-            spl = name.rsplit(".",1)
+            spl = name.rsplit(".", 1)
             last_ctx = self.context.last()
             if not "static_identifier" in last_ctx: last_ctx["static_identifier"] = ""
-            if spl[0] not in ["math","os","coroutine","table","string",self.context.last()['static_identifier']]:
+            if spl[0] not in ["math", "os", "coroutine", "table", "string", self.context.last()['static_identifier']]:
                 name = ":".join(spl)
         else:
             name = self.visit_all(node.func, inline=True)
@@ -124,13 +139,14 @@ class NodeVisitor(ast.NodeVisitor):
         local_keyword = ""
         last_ctx = self.context.last()
 
-        if not (self.context.top() and not self.config["top_locals"]) and not last_ctx["class_name"] and not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
+        if not (self.context.top() and not self.config["top_locals"]) and not last_ctx["class_name"] and not last_ctx[
+            "locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
             local_keyword = "local "
         if not last_ctx["locals"].exists(node.name) and not last_ctx["globals"].exists(node.name):
             last_ctx["locals"].add_symbol(node.name)
-        for i,base in enumerate(bases):
+        for i, base in enumerate(bases):
             if last_ctx['class_name'] and last_ctx['locals'].exists(base):
-                bases[i] = '.'.join([last_ctx['class_name'],base])
+                bases[i] = '.'.join([last_ctx['class_name'], base])
         name = node.name
         if last_ctx["class_name"]:
             name = ".".join([last_ctx["class_name"], name])
@@ -140,15 +156,17 @@ class NodeVisitor(ast.NodeVisitor):
         properties = {}
         for nnode in node.body:
             if type(nnode) == ast.FunctionDef:
-                try: dl = [decorator.id for decorator in reversed(nnode.decorator_list)]
-                except: pass
+                try:
+                    dl = [decorator.id for decorator in reversed(nnode.decorator_list)]
+                except:
+                    pass
                 if "property" in dl:
                     properties[nnode.name] = '\"{}\"'.format(".".join([name, nnode.name]))
-                if nnode.name in ["__add__","__sub__",
-                                  "__eq__","__ne__",
-                                  "__lt__","__le__","__gt__","__ge__",
-                                  "__mul__","__div__",
-                                  "__mod__","__pow__",
+                if nnode.name in ["__add__", "__sub__",
+                                  "__eq__", "__ne__",
+                                  "__lt__", "__le__", "__gt__", "__ge__",
+                                  "__mul__", "__div__",
+                                  "__mod__", "__pow__",
                                   "__len__",
                                   "__gc__"]:  # the GC module does not work in python, but it does in lua!
                     mtmethods[nnode.name.rstrip("_")] = "\"{}\"".format(nnode.name)
@@ -159,8 +177,8 @@ class NodeVisitor(ast.NodeVisitor):
                 if nnode.name == "__contains__":
                     mtmethods["__in"] = "\"{}\"".format(nnode.name)
 
-        mtmethods = ", ".join(["{} = {}".format(key,mtmethods[key]) for key in mtmethods])
-        properties = ", ".join(["{} = {}".format(key,properties[key]) for key in properties])
+        mtmethods = ", ".join(["{} = {}".format(key, mtmethods[key]) for key in mtmethods])
+        properties = ", ".join(["{} = {}".format(key, properties[key]) for key in properties])
         values = {
             "local": local_keyword,
             "name": name,
@@ -175,7 +193,7 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.output[-1].append("return {node_name}".format(**values))
 
-        self.emit("end, \"{}\", {{{}}}, {{{}}}, {{{}}})".format(node.name, ", ".join(bases),mtmethods,properties))
+        self.emit("end, \"{}\", {{{}}}, {{{}}}, {{{}}})".format(node.name, ", ".join(bases), mtmethods, properties))
 
         # Return class object only in the top-level classes.
         # Not in the nested classes.
@@ -291,8 +309,8 @@ class NodeVisitor(ast.NodeVisitor):
 
         self.output.append(output)
 
-    def visit_ExtSlice(self,node):
-        dims_values = [self.visit_all(n,inline=True) for n in node.dims]
+    def visit_ExtSlice(self, node):
+        dims_values = [self.visit_all(n, inline=True) for n in node.dims]
         value = ", ".join(dims_values)
         self.emit("tuple {{{}}}".format(value))
 
@@ -309,18 +327,17 @@ class NodeVisitor(ast.NodeVisitor):
             decorator_name = self.visit_all(decorator, inline=True)
             # make sure that it uses methods instead of global functions when they are available
             if last_ctx["methods"].exists(decorator_name.split(".")[0]) and last_ctx["class_name"]:
-                decorator_name = ":".join(decorator_name.rsplit(".",1))
-                decorator_name = ".".join([last_ctx["class_name"],decorator_name])
+                decorator_name = ":".join(decorator_name.rsplit(".", 1))
+                decorator_name = ".".join([last_ctx["class_name"], decorator_name])
             # add the decorator to the function definition.
-            line = '{}({}'.format(decorator_name,line)
+            line = '{}({}'.format(decorator_name, line)
             end = '{})'.format(end)
 
         if decorator_name:
-            line = "{local}{name} = "+line
+            line = "{local}{name} = " + line
         else:
             # if there is no decorator then we can define the function normally
             line = "{local}function {name}({arguments})"
-
 
         name = node.name
         if last_ctx["class_name"]:
@@ -336,7 +353,8 @@ class NodeVisitor(ast.NodeVisitor):
 
         # added the top function for the context, since we want things in the topmost layer to be defined globally
         # I should probably add something in config for it but at the moment I am too lazy.
-        if not (self.context.top() and not self.config["top_locals"]) and "." not in name and not last_ctx["locals"].exists(name) and not last_ctx["globals"].exists(name):
+        if not (self.context.top() and not self.config["top_locals"]) and "." not in name and not last_ctx[
+            "locals"].exists(name) and not last_ctx["globals"].exists(name):
             local_keyword = "local "
         if "." not in name and not last_ctx["locals"].exists(name) and not last_ctx["globals"].exists(name):
             last_ctx["locals"].add_symbol(name)
@@ -375,7 +393,6 @@ class NodeVisitor(ast.NodeVisitor):
 
         # the end variable also closes parameters for possible decorators.
         self.emit(end)
-
 
     def visit_For(self, node):
         """Visit for loop"""
@@ -461,7 +478,7 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_ImportFrom(self, node):
         """Visit import"""
         line = 'require("{module}")'
-        values = {"module": node.module }
+        values = {"module": node.module}
         self.emit(line.format(**values))
 
     def visit_Index(self, node):
@@ -550,12 +567,11 @@ class NodeVisitor(ast.NodeVisitor):
         line += self.visit_all(node.value, inline=True)
         self.emit(line)
 
-
-    def visit_Slice(self,node):
+    def visit_Slice(self, node):
         values = {
-            'lower': self.visit_all(node.lower,inline=True) if node.lower else "nil",
-            'upper': self.visit_all(node.upper,inline=True) if node.upper else "nil",
-            'step': self.visit_all(node.step,inline=True)  if node.step else "nil"
+            'lower': self.visit_all(node.lower, inline=True) if node.lower else "nil",
+            'upper': self.visit_all(node.upper, inline=True) if node.upper else "nil",
+            'step': self.visit_all(node.step, inline=True) if node.step else "nil"
         }
         self.emit("slice({lower},{upper},{step})".format(**values))
 
@@ -575,11 +591,11 @@ class NodeVisitor(ast.NodeVisitor):
                 fn = m.groups()[0][1:]
                 try:
                     import os
-                    with open(fn,'r') as f:
+                    with open(fn, 'r') as f:
                         lns = f.readlines()
                     value = "".join(lns) + "\n" + value
                 except:
-                    print('Warning: LUA file ({}) not found'.format(os.path.join(os.getcwd(),fn)))
+                    print('Warning: LUA file ({}) not found'.format(os.path.join(os.getcwd(), fn)))
             self.emit(value)
         elif self.context.last()["docstring"]:
             self.emit('--[[ {} ]]'.format(node.s))
@@ -592,10 +608,11 @@ class NodeVisitor(ast.NodeVisitor):
     def visit_Subscript(self, node):
         """Visit subscript"""
         line = "{name}[{index}]"
-        if not isinstance(node.slice,ast.Slice) and not isinstance(node.slice,ast.ExtSlice) and isinstance(node.slice.value,ast.Tuple):
+        if not isinstance(node.slice, ast.Slice) and not isinstance(node.slice, ast.ExtSlice) and isinstance(
+                node.slice.value, ast.Tuple):
             values = {
                 "name": self.visit_all(node.value, inline=True),
-                "index": "tuple {"+self.visit_all(node.slice, inline=True)+"}",
+                "index": "tuple {" + self.visit_all(node.slice, inline=True) + "}",
             }
         else:
             values = {
@@ -604,7 +621,7 @@ class NodeVisitor(ast.NodeVisitor):
             }
         self.emit(line.format(**values))
 
-    def visit_Try(self,node):
+    def visit_Try(self, node):
         """Visit try"""
         self.emit("xpcall(function()")
         self.visit_all(node.body)
