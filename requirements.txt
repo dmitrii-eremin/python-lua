@@ -1,2 +1,2 @@
 colorama==0.3.7
-PyYAML==3.12
+PyYAML==5.1
