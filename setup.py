@@ -19,4 +19,9 @@ setup(
         "Topic :: Software Development",
         "Topic :: Utilities",
     ],
+    entry_points={
+        "console_scripts": [
+            "python-lua = python-lua.__main__:main",
+        ],
+    }
 )
