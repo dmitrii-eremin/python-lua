@@ -27,7 +27,7 @@ setup(
         "console_scripts": [
             "python-lua = pythonlua.__main__:main",
         ],
-    }
+    },
     package_data={'': ['pythonlua/*.lua']},
     include_package_data=True,
 )
