@@ -20,7 +20,7 @@ setup(
         "Topic :: Utilities",
     ],
     install_requires=[
-        "colorama==0.3.7"
+        "colorama==0.3.7",
         "PyYAML==5.4"
     ],
     entry_points={
