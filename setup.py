@@ -11,7 +11,7 @@ setup(
     author_email="mail@eremindmitry.ru",
     license="Apache 2.0",
     python_requires=">=3.4",
-    packages=find_packages(include=['pythonlua', 'pythonlua.*']),
+    packages=find_packages(),
     long_description="",
     classifiers=[
         "Operating System :: OS Independent",
@@ -28,4 +28,6 @@ setup(
             "python-lua = pythonlua.__main__:main",
         ],
     }
+    package_data={'': ['pythonlua/*.lua']},
+    include_package_data=True,
 )
