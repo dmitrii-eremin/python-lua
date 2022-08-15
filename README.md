@@ -5,6 +5,11 @@ Lua version: 5.2
 
 **I want to know more about [FEATURES](#features)!**
 
+## Installation
+
+```console
+pip install -U git+https://github.com/dmitrii-eremin/python-lua.git
+```
 
 ## Usage
 

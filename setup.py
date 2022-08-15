@@ -9,7 +9,7 @@ setup(
     url="https://github.com/NeonMercury/python-lua",
     author="Eremin Dmitry",
     author_email="mail@eremindmitry.ru",
-    licence="Apache 2.0",
+    license="Apache 2.0",
     python_requires=">=3.4",
     packages=find_packages(),
     long_description="",
@@ -19,4 +19,14 @@ setup(
         "Topic :: Software Development",
         "Topic :: Utilities",
     ],
+    install_requires=[
+        "colorama==0.3.7",
+        "PyYAML==5.4"
+    ],
+    entry_points={
+        "console_scripts": [
+            "python-lua = pythonlua.__main__:main",
+        ],
+    },
+    include_package_data=True,
 )

@@ -33,10 +33,8 @@ def main():
     parser = create_arg_parser()
     argv = parser.parse_args()
 
-    if not argv.no_lua_init and not argv.show_ast:
-        print(Translator.get_luainit())
-
     if argv.only_lua_init:
+        print(Translator.get_luainit())
         return 0
 
     input_filename = argv.inputfilename
@@ -45,7 +43,7 @@ def main():
             "The given filename ('{}') is not a file.".format(input_filename))
 
     content = None
-    with open(input_filename, "r") as file:
+    with open(input_filename, "r", encoding='utf-8') as file:
         content = file.read()
 
     if not content:
@@ -54,6 +52,9 @@ def main():
     translator = Translator(Config(argv.configfilename),
                             show_ast=argv.show_ast)
     lua_code = translator.translate(content)
+     
+    if not argv.no_lua_init and not argv.show_ast:
+        print(Translator.get_luainit())
 
     if not argv.only_lua_init and not argv.show_ast:
         print(lua_code)
