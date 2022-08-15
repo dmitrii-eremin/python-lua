@@ -9,9 +9,9 @@ setup(
     url="https://github.com/NeonMercury/python-lua",
     author="Eremin Dmitry",
     author_email="mail@eremindmitry.ru",
-    licence="Apache 2.0",
+    license="Apache 2.0",
     python_requires=">=3.4",
-    packages=find_packages(),
+    packages=find_packages(include=['pythonlua', 'pythonlua.*']),
     long_description="",
     classifiers=[
         "Operating System :: OS Independent",
