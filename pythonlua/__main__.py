@@ -45,7 +45,7 @@ def main():
             "The given filename ('{}') is not a file.".format(input_filename))
 
     content = None
-    with open(input_filename, "r") as file:
+    with open(input_filename, "r", encoding='utf-8') as file:
         content = file.read()
 
     if not content:
