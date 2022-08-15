@@ -19,6 +19,10 @@ setup(
         "Topic :: Software Development",
         "Topic :: Utilities",
     ],
+    install_requires=[
+        "colorama==0.3.7"
+        "PyYAML==5.4"
+    ],
     entry_points={
         "console_scripts": [
             "python-lua = pythonlua.__main__:main",
